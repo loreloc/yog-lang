@@ -1,0 +1,9 @@
+
+var
+	a : int;
+	b : int;
+	c : int;
+begin
+	c = a + b;
+end
+
