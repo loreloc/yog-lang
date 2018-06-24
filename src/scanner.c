@@ -64,6 +64,7 @@ scan_result_t scan(scanner_t *scanner)
 	else
 	{
 		character = scanner->lookahead;
+		scanner->lookahead = '\0';
 	}
 
 	// check for the end of the file
