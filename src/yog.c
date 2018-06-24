@@ -19,6 +19,14 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
+	// initialize the error handler
+	err_handler_t err_handler;
+	if(!err_handler_init(&err_handler))
+	{
+		printf("failed to initialize the error handler\n");
+		return 2;
+	}
+
 	// initialize the scanner
 	scanner_t scanner;
 	scanner_init(&scanner, source_file);
@@ -26,9 +34,9 @@ int main(int argc, char* argv[])
 	// execute the lexical analysis
 	while(!feof(source_file))
 	{
-		scan_result_t result = scan(&scanner);
+		scan_result_t result;
 
-		if(result.token.type == TOKEN_INVALID)
+		if(!scan(&result, &scanner, &err_handler))
 			continue;
 
 		printf("%ld %ld\t", result.location.row, result.location.col);
@@ -88,6 +96,20 @@ int main(int argc, char* argv[])
 				break;
 		}
 	}
+
+	printf("\n");
+
+	// check for errors
+	for(size_t i = 0; i < err_handler.errors_cnt; ++i)
+	{
+		const err_t error = err_handler.errors[i];
+
+		printf("LEXICAL ERROR \"%s\" at %lu, %lu\n",
+			error.message, error.location.row, error.location.col);
+	}
+
+	// clear the error handler
+	err_handler_clear(&err_handler);
 
 	// close the source file
 	fclose(source_file);

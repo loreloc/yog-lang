@@ -1,8 +1,7 @@
 
 #include "scanner.h"
 
-#define TEXT_MAX_LENGTH 31
-#define TEXT_MAX_SIZE (TEXT_MAX_LENGTH+1)
+#define TEXT_MAX_SIZE 32
 
 // the states of the finite state automata
 typedef enum
@@ -44,13 +43,11 @@ void scanner_init(scanner_t *scanner, FILE *file)
 	scanner->cursor.row = scanner->cursor.col = 1;
 }
 
-scan_result_t scan(scanner_t *scanner)
+bool scan(scan_result_t *result, scanner_t *scanner, err_handler_t *err_handler)
 {
-	scan_result_t result;
-	result.token.type = TOKEN_INVALID;
-
 	char text[TEXT_MAX_SIZE] = { '\0' };
 	size_t text_length = 0;
+	location_t text_location;
 
 	fsa_state_t state = FSA_START;
 	char character;
@@ -68,7 +65,7 @@ scan_result_t scan(scanner_t *scanner)
 
 	// check for the end of the file
 	if(feof(scanner->file))
-		return result;
+		return false;
 
 	// get the next state of the automata
 	state = next_state(state, identify_char(character));
@@ -84,7 +81,7 @@ scan_result_t scan(scanner_t *scanner)
 
 		// check for the end of the file
 		if(feof(scanner->file))
-			return result;
+			return false;
 
 		// change the state
 		state = next_state(state, identify_char(character));
@@ -94,8 +91,8 @@ scan_result_t scan(scanner_t *scanner)
 	}
 
 	// initialize the result location
-	result.location.row = scanner->cursor.row;
-	result.location.col = scanner->cursor.col - 1;
+	text_location.row = scanner->cursor.row;
+	text_location.col = scanner->cursor.col - 1;
 
 	// add the read character to the text
 	text[text_length++] = character;
@@ -122,49 +119,71 @@ scan_result_t scan(scanner_t *scanner)
 		// change the state
 		state = new_state;
 
-		// add the read character to the text
-		text[text_length++] = character;
+		if(text_length < TEXT_MAX_SIZE)
+		{
+			// add the read character to the text
+			text[text_length++] = character;
+		}
 
 		// update the cursor
 		update_cursor(&scanner->cursor, character);
+	}
 
-		if(text_length > TEXT_MAX_LENGTH)
-		{
-			// TODO: handle error
-			return result;
-		}
+	// check if the text string is too long
+	if(text_length == TEXT_MAX_SIZE)
+	{
+		err_handler_add(err_handler,
+			(err_t)
+			{
+				.location = text_location,
+				.type = ERROR_LEXICAL,
+				.message = string_duplicate("text overflow")
+			});
+
+		return false;
 	}
 
 	// construct the result token
 	switch(state)
 	{
 		case FSA_LITERAL:
-			result.token.type = TOKEN_LITERAL;
-			result.token.literal = atoi(text);
+			result->token.type = TOKEN_LITERAL;
+			result->token.literal = atoi(text);
+			result->location = text_location;
 			break;
 
 		case FSA_WORD:
-			result.token = get_token_word(text);
+			result->token = get_token_word(text);
+			result->location = text_location;
 			break;
 
 		case FSA_OPERATOR:
-			result.token = get_token_operator(text);
+			result->token = get_token_operator(text);
+			result->location = text_location;
 			break;
 
 		case FSA_COLON:
-			result.token.type = TOKEN_COLON;
+			result->token.type = TOKEN_COLON;
+			result->location = text_location;
 			break;
 
 		case FSA_SEMICOLON:
-			result.token.type = TOKEN_SEMICOLON;
+			result->token.type = TOKEN_SEMICOLON;
+			result->location = text_location;
 			break;
 
 		default:
-			// TODO: handle error
-			break;
+			err_handler_add(err_handler,
+				(err_t)
+				{
+					.location = text_location,
+					.type = ERROR_LEXICAL,
+					.message = string_duplicate(text)
+				});
+			return false;
 	}
 
-	return result;
+	return true;
 }
 
 void update_cursor(location_t *cursor, char c)
@@ -210,7 +229,7 @@ fsa_state_t next_state(fsa_state_t state, char_class_t class)
 		/* OPERATOR  */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT },
 		/* COLON     */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT },
 		/* SEMICOLON */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT },
-		/* ERROR     */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT }
+		/* ERROR     */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ERROR  }
 	};
 
 	// return the next state of the finite state automata
@@ -232,8 +251,7 @@ token_t get_token_word(char *text)
 	else
 	{
 		result.type = TOKEN_IDENTIFIER;
-		result.string = calloc(TEXT_MAX_SIZE, sizeof(char));
-		strcpy(result.string, text);
+		result.string = string_duplicate(text);
 	}
 
 	return result;

@@ -10,7 +10,6 @@
  */
 typedef enum
 {
-	TOKEN_INVALID,
 	TOKEN_VAR,
 	TOKEN_BEGIN,
 	TOKEN_END,

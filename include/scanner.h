@@ -4,11 +4,9 @@
 #pragma once
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
-
-#include "location.h"
+#include "common.h"
+#include "errors.h"
 #include "token.h"
 
 /**
@@ -41,7 +39,10 @@ void scanner_init(scanner_t *scanner, FILE *file);
 
 /**
  * @brief Execute a lexical analysis step
+ * @param result A pointer to the scan result
  * @param scanner A pointer to the lexical analyser
+ * @param err_handler A pointer to the error handler
+ * @return false if an error occured, true otherwise
  */
-scan_result_t scan(scanner_t *scanner);
+bool scan(scan_result_t *result, scanner_t *scanner, err_handler_t *err_handler);
 
