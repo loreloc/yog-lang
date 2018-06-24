@@ -10,6 +10,7 @@
  */
 typedef enum
 {
+	TOKEN_INVALID,
 	TOKEN_VAR,
 	TOKEN_BEGIN,
 	TOKEN_END,
@@ -35,7 +36,7 @@ typedef struct
 
 	union
 	{
-		int64_t integer;
+		int64_t literal;
 		char* string;
 	};
 

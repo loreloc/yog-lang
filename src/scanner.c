@@ -1,6 +1,9 @@
 
 #include "scanner.h"
 
+#define TEXT_MAX_LENGTH 31
+#define TEXT_MAX_SIZE (TEXT_MAX_LENGTH+1)
+
 // the states of the finite state automata
 typedef enum
 {
@@ -27,6 +30,148 @@ typedef enum
 	CHAR_UNKNOW
 
 } char_class_t;
+
+void update_cursor(location_t *cursor, char c);
+char_class_t identify_char(char c);
+fsa_state_t next_state(fsa_state_t state, char_class_t class);
+token_t get_token_word(char *text);
+token_t get_token_operator(char *text);
+
+void scanner_init(scanner_t *scanner, FILE *file)
+{
+	scanner->file = file;
+	scanner->lookahead = '\0';
+	scanner->cursor.row = scanner->cursor.col = 1;
+}
+
+scan_result_t scan(scanner_t *scanner)
+{
+	scan_result_t result;
+	result.token.type = TOKEN_INVALID;
+
+	char text[TEXT_MAX_SIZE] = { '\0' };
+	size_t text_size = 0;
+
+	fsa_state_t state = FSA_START;
+	char character;
+
+	// check the lookahead character
+	if(scanner->lookahead == '\0')
+	{
+		character = fgetc(scanner->file);
+		update_cursor(&scanner->cursor, character);
+	}
+	else
+	{
+		character = scanner->lookahead;
+	}
+
+	// check for the end of the file
+	if(feof(scanner->file))
+		return result;
+
+	// get the next state of the automata
+	state = next_state(state, identify_char(character));
+
+	// ignore whitespaces
+	while(state == FSA_START)
+	{
+		// get the next character
+		character = fgetc(scanner->file);
+
+		// check for the end of the file
+		if(feof(scanner->file))
+			return result;
+
+		// change the state
+		state = next_state(state, identify_char(character));
+
+		// update the cursor
+		update_cursor(&scanner->cursor, character);
+	}
+
+	// initialize the result location
+	result.location = scanner->cursor;
+
+	// add the read character to the text
+	text[text_size++] = character;
+
+	while(true)
+	{
+		// read the next character
+		character = fgetc(scanner->file);
+
+		// check fo the end of the file
+		if(feof(scanner->file))
+			break;
+
+		// get the next state of the automata
+		fsa_state_t new_state = next_state(state, identify_char(character));
+
+		// check if the new state is final
+		if(new_state == FSA_ACCEPT)
+		{
+			scanner->lookahead = character;
+			break;
+		}
+
+		// change the state
+		state = new_state;
+
+		// add the read character to the text
+		text[text_size++] = character;
+
+		// update the cursor
+		update_cursor(&scanner->cursor, character);
+
+		if(text_size > TEXT_MAX_LENGTH)
+			return result;
+	}
+
+	// construct the result token
+	switch(state)
+	{
+		case FSA_LITERAL:
+			result.token.type = TOKEN_LITERAL;
+			result.token.literal = atoi(text);
+			break;
+
+		case FSA_WORD:
+			result.token = get_token_word(text);
+			break;
+
+		case FSA_OPERATOR:
+			result.token = get_token_operator(text);
+			break;
+
+		case FSA_COLON:
+			result.token.type = TOKEN_COLON;
+			break;
+
+		case FSA_SEMICOLON:
+			result.token.type = TOKEN_SEMICOLON;
+			break;
+
+		default:
+			// TODO: handle error
+			break;
+	}
+
+	return result;
+}
+
+void update_cursor(location_t *cursor, char c)
+{
+	if(c == '\n')
+	{
+		cursor->row++;
+		cursor->col = 1;
+	}
+	else
+	{
+		cursor->col++;
+	}
+}
 
 char_class_t identify_char(char c)
 {
@@ -65,10 +210,41 @@ fsa_state_t next_state(fsa_state_t state, char_class_t class)
 	return Transition_Table[(size_t)state][(size_t)class];
 }
 
-void scanner_init(scanner_t *scanner, FILE *source_file)
+token_t get_token_word(char *text)
 {
-	scanner->source_file = source_file;
-	scanner->cursor.row = scanner->cursor.col = 1;
-	scanner->lookahead = true;
+	token_t result;
+
+	if(strcmp(text, "var") == 0)
+		result.type = TOKEN_VAR;
+	else if(strcmp(text, "begin") == 0)
+		result.type = TOKEN_BEGIN;
+	else if(strcmp(text, "end") == 0)
+		result.type = TOKEN_END;
+	else if(strcmp(text, "int") == 0)
+		result.type = TOKEN_INT;
+	else
+	{
+		result.type = TOKEN_IDENTIFIER;
+		result.string = calloc(TEXT_MAX_SIZE, sizeof(char));
+		strcpy(result.string, text);
+	}
+
+	return result;
+}
+
+token_t get_token_operator(char *text)
+{
+	token_t result;
+
+	switch(text[0])
+	{
+		case '+': result.type = TOKEN_PLUS;  break;
+		case '-': result.type = TOKEN_MINUS; break;
+		case '*': result.type = TOKEN_MUL;   break;
+		case '/': result.type = TOKEN_DIV;   break;
+		default:  result.type = TOKEN_EQUAL; break;
+	}
+
+	return result;
 }
 

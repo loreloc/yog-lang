@@ -4,38 +4,44 @@
 #pragma once
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <stdbool.h>
 
 #include "location.h"
 #include "token.h"
 
 /**
+ * @brief The result of the scan function
+ */
+typedef struct
+{
+	token_t token;
+	location_t location;
+
+} scan_result_t;
+
+/**
  * @brief The lexical analyser
  */
 typedef struct
 {
-	FILE* source_file;
+	FILE* file;
+	char lookahead;
 	location_t cursor;
-	char next_char;
-	bool lookahead;
 
 } scanner_t;
 
 /**
- * @brief The result of a lexical analysis step
+ * @brief Initialize a lexical analyser
+ * @param scanner A pointer to the lexical analyser to initialize
+ * @param file The source file pointer
  */
-typedef struct
-{
-	bool valid;
-	token_t token;
-	location_t location;
-
-} lex_result_t;
+void scanner_init(scanner_t *scanner, FILE *file);
 
 /**
- * @brief Initialize the lexical analyser
- * @param scanner A pointer to the scanner to initialize
- * @param source_file The source code file pointer
+ * @brief Execute a lexical analysis step
+ * @param scanner A pointer to the lexical analyser
  */
-void scanner_init(scanner_t *scanner, FILE *source_file);
+scan_result_t scan(scanner_t *scanner);
 
