@@ -31,6 +31,8 @@ int main(int argc, char* argv[])
 		if(result.token.type == TOKEN_INVALID)
 			continue;
 
+		printf("%ld %ld\t", result.location.row, result.location.col);
+
 		switch(result.token.type)
 		{
 			case TOKEN_VAR:

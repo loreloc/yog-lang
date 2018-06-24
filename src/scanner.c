@@ -50,7 +50,7 @@ scan_result_t scan(scanner_t *scanner)
 	result.token.type = TOKEN_INVALID;
 
 	char text[TEXT_MAX_SIZE] = { '\0' };
-	size_t text_size = 0;
+	size_t text_length = 0;
 
 	fsa_state_t state = FSA_START;
 	char character;
@@ -59,7 +59,6 @@ scan_result_t scan(scanner_t *scanner)
 	if(scanner->lookahead == '\0')
 	{
 		character = fgetc(scanner->file);
-		update_cursor(&scanner->cursor, character);
 	}
 	else
 	{
@@ -73,6 +72,9 @@ scan_result_t scan(scanner_t *scanner)
 
 	// get the next state of the automata
 	state = next_state(state, identify_char(character));
+
+	// update the cursor
+	update_cursor(&scanner->cursor, character);
 
 	// ignore whitespaces
 	while(state == FSA_START)
@@ -92,10 +94,11 @@ scan_result_t scan(scanner_t *scanner)
 	}
 
 	// initialize the result location
-	result.location = scanner->cursor;
+	result.location.row = scanner->cursor.row;
+	result.location.col = scanner->cursor.col - 1;
 
 	// add the read character to the text
-	text[text_size++] = character;
+	text[text_length++] = character;
 
 	while(true)
 	{
@@ -120,13 +123,16 @@ scan_result_t scan(scanner_t *scanner)
 		state = new_state;
 
 		// add the read character to the text
-		text[text_size++] = character;
+		text[text_length++] = character;
 
 		// update the cursor
 		update_cursor(&scanner->cursor, character);
 
-		if(text_size > TEXT_MAX_LENGTH)
+		if(text_length > TEXT_MAX_LENGTH)
+		{
+			// TODO: handle error
 			return result;
+		}
 	}
 
 	// construct the result token
