@@ -5,61 +5,63 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include <stdbool.h>
-#include <location.h>
+#include "location.h"
 
 /*! The maximum number of errors that an error handler can hold */
 #define ERRORS_MAX_CNT 128
 
+/*! The maximum size of the error message string */
+#define ERROR_MSG_SIZE 32
+
 /**
  * @brief All the possible error types
  */
-typedef enum
+enum error_type
 {
 	ERROR_LEXICAL
-
-} err_type_t;
+};
 
 /**
  * @brief Error informations
  */
-typedef struct
+struct error
 {
-	location_t location;
-	err_type_t type;
-	char *message;
-
-} err_t;
+	struct location loc;      /*!< The location in the source code */
+	enum error_type type;     /*!< The type of the error */
+	char msg[ERROR_MSG_SIZE]; /*!< An helpful message */
+};
 
 /**
  * @brief Error handler
  */
-typedef struct
+struct error_handler
 {
-	size_t errors_cnt;
-	err_t *errors;
-
-} err_handler_t;
+	size_t errors_cnt;    /*!< The number of errors registered */
+	struct error *errors; /*!< The errors array */
+};
 
 /**
  * @brief Initialize an error handler
- * @param err_handler A pointer to the error handler to initialize
- * @return false if an error occured, true otherwise
+ * @param err_hnd A pointer to the error handler to initialize
  */
-bool err_handler_init(err_handler_t *err_handler);
+void error_handler_init(struct error_handler *err_hnd);
 
 /**
  * @brief Clear the resources holded by an error handler
- * @param err_handler A pointer to the error handler to clean
+ * @param err_hnd A pointer to the error handler to clean
  */
-void err_handler_clear(err_handler_t *err_handler);
+void error_handler_clear(struct error_handler *err_hnd);
 
 /**
  * @brief Notify a new error to an error handler
- * @param err_handler A pointer to the error handler
- * @param err The error to add to the error array
+ * @param err_hnd A pointer to the error handler
+ * @param loc The error location in the source code
+ * @param type The type of the error
+ * @param msg The helpful message string
  * @return false if an error occured, true otherwise
  */
-bool err_handler_add(err_handler_t *err_handler, err_t err);
+bool error_handler_add(struct error_handler *err_hnd, struct location loc, enum error_type type, const char* msg);
 
 

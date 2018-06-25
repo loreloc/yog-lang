@@ -1,37 +1,31 @@
 
 #include "errors.h"
 
-bool err_handler_init(err_handler_t *err_handler)
+void error_handler_init(struct error_handler *err_hnd)
 {
-	err_handler->errors_cnt = 0;
-	err_handler->errors = malloc(ERRORS_MAX_CNT * sizeof(err_t));
-
-	if(!err_handler->errors)
-		return false;
-
-	return true;
+	err_hnd->errors_cnt = 0;
+	err_hnd->errors = malloc(ERRORS_MAX_CNT * sizeof(struct error));
 }
 
-void err_handler_clear(err_handler_t *err_handler)
+void error_handler_clear(struct error_handler *err_hnd)
 {
-	// free the error string messages
-	for(size_t i = 0; i < err_handler->errors_cnt; ++i)
-		free(err_handler->errors[i].message);
-
 	// free the error array
-	free(err_handler->errors);
-	err_handler->errors = NULL;
-	err_handler->errors_cnt = 0;
+	free(err_hnd->errors);
+	err_hnd->errors = NULL;
+	err_hnd->errors_cnt = 0;
 }
 
-bool err_handler_add(err_handler_t *err_handler, err_t err)
+bool error_handler_add(struct error_handler *err_hnd, struct location loc, enum error_type type, const char *msg)
 {
 	// check for errors overflow
-	if(err_handler->errors_cnt >= ERRORS_MAX_CNT)
+	if(err_hnd->errors_cnt >= ERRORS_MAX_CNT)
 		return false;
 
 	// add a new error to the error array
-	err_handler->errors[err_handler->errors_cnt++] = err;
+	const size_t new_err_index = err_hnd->errors_cnt++;
+	err_hnd->errors[new_err_index].loc = loc;
+	err_hnd->errors[new_err_index].type = type;
+	strncpy(err_hnd->errors[new_err_index].msg, msg, ERROR_MSG_SIZE);
 
 	return true;
 }

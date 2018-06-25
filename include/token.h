@@ -5,10 +5,13 @@
 
 #include <stdint.h>
 
+/*! The maximum size of the token string */
+#define TOKEN_STR_SIZE 32
+
 /**
- * @brief The types of a token
+ * @brief The possible types of a token
  */
-typedef enum
+enum token_type
 {
 	TOKEN_VAR,
 	TOKEN_BEGIN,
@@ -23,21 +26,20 @@ typedef enum
 	TOKEN_MUL,
 	TOKEN_DIV,
 	TOKEN_EQUAL
-
-} token_type_t;
+};
 
 /**
  * @brief The token data structure
  */
-typedef struct
+struct token
 {
-	token_type_t type;
+	enum token_type type; /*!< The type of the token */
 
 	union
 	{
-		int64_t literal;
-		char* string;
-	};
+		int64_t lit; /*!< The literal field */
 
-} token_t;
+		char str[TOKEN_STR_SIZE]; /*!< The string field */
+	};
+};
 

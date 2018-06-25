@@ -4,45 +4,41 @@
 #pragma once
 
 #include <stdio.h>
-#include <string.h>
-#include "common.h"
 #include "errors.h"
 #include "token.h"
 
 /**
  * @brief The result of the scan function
  */
-typedef struct
+struct scan_result
 {
-	token_t token;
-	location_t location;
-
-} scan_result_t;
+	struct token tok;    /*!< The token value of the scan result */
+	struct location loc; /*!< The location of the token in the source code */
+};
 
 /**
  * @brief The lexical analyser
  */
-typedef struct
+struct scanner
 {
-	FILE* file;
-	char lookahead;
-	location_t cursor;
-
-} scanner_t;
+	FILE* source;        /*!< The source code file */
+	char lookahead;      /*!< The lookahead character */
+	struct location loc; /*!< The current location in the source code */
+};
 
 /**
  * @brief Initialize a lexical analyser
- * @param scanner A pointer to the lexical analyser to initialize
- * @param file The source file pointer
+ * @param scn A pointer to the lexical analyser to initialize
+ * @param source The source file pointer
  */
-void scanner_init(scanner_t *scanner, FILE *file);
+void scanner_init(struct scanner *scn, FILE *source);
 
 /**
  * @brief Execute a lexical analysis step
- * @param result A pointer to the scan result
- * @param scanner A pointer to the lexical analyser
- * @param err_handler A pointer to the error handler
+ * @param res A pointer to the scan result
+ * @param scn A pointer to the lexical analyser
+ * @param err_hnd A pointer to the error handler
  * @return false if an error occured, true otherwise
  */
-bool scan(scan_result_t *result, scanner_t *scanner, err_handler_t *err_handler);
+bool scan(struct scan_result *res, struct scanner *scn, struct error_handler *err_hnd);
 
