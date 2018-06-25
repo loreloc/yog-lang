@@ -1,6 +1,8 @@
 
 #include "scanner.h"
 
+#define TEXT_SIZE ID_STR_SIZE
+
 // the states of the finite state automata
 enum fsa_state
 {
@@ -41,7 +43,7 @@ void scanner_init(struct scanner *scn, FILE *source)
 
 bool scan(struct scan_result *res, struct scanner *scn, struct error_handler *err_hnd)
 {
-	char text[TOKEN_STR_SIZE] = { '\0' };
+	char text[TEXT_SIZE] = { '\0' };
 	size_t text_len = 0;
 	struct location text_loc;
 
@@ -102,7 +104,7 @@ bool scan(struct scan_result *res, struct scanner *scn, struct error_handler *er
 		// change the state
 		state = new_state;
 
-		if(text_len < TOKEN_STR_SIZE)
+		if(text_len < TEXT_SIZE)
 		{
 			// add the read character to the text
 			text[text_len++] = character;
@@ -113,7 +115,7 @@ bool scan(struct scan_result *res, struct scanner *scn, struct error_handler *er
 	}
 
 	// check if the text string is too long
-	if(text_len == TOKEN_STR_SIZE)
+	if(text_len == TEXT_SIZE)
 	{
 		error_handler_add(err_hnd, text_loc, ERROR_LEXICAL, "TEXT OVERFLOW");
 		return false;
@@ -216,7 +218,7 @@ struct token get_token_word(char *text)
 	else
 	{
 		res.type = TOKEN_IDENTIFIER;
-		strncpy(res.str, text, TOKEN_STR_SIZE);
+		strncpy(res.id, text, ID_STR_SIZE);
 	}
 
 	return res;

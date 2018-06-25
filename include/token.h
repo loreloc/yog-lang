@@ -4,9 +4,7 @@
 #pragma once
 
 #include <stdint.h>
-
-/*! The maximum size of the token string */
-#define TOKEN_STR_SIZE 32
+#include "config.h"
 
 /**
  * @brief The possible types of a token
@@ -39,7 +37,7 @@ struct token
 	{
 		int64_t lit; /*!< The literal field */
 
-		char str[TOKEN_STR_SIZE]; /*!< The string field */
+		char id[ID_STR_SIZE]; /*!< The identifier field */
 	};
 };
 

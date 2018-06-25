@@ -7,13 +7,14 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
+#include "config.h"
 #include "location.h"
 
 /*! The maximum number of errors that an error handler can hold */
 #define ERRORS_MAX_CNT 128
 
 /*! The maximum size of the error message string */
-#define ERROR_MSG_SIZE 32
+#define ERROR_MSG_SIZE ID_STR_SIZE
 
 /**
  * @brief All the possible error types
