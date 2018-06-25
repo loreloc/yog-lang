@@ -31,13 +31,13 @@ enum token_type
  */
 struct token
 {
-	enum token_type type; /*!< The type of the token */
+	enum token_type type; /*!< @brief The type of the token */
 
 	union
 	{
-		int64_t lit; /*!< The literal field */
+		int64_t lit; /*!< @brief The literal field */
 
-		char id[ID_STR_SIZE]; /*!< The identifier field */
+		char id[ID_STR_SIZE]; /*!< @brief The identifier field */
 	};
 };
 

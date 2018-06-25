@@ -12,8 +12,8 @@
  */
 struct scan_result
 {
-	struct token tok;    /*!< The token value of the scan result */
-	struct location loc; /*!< The location of the token in the source code */
+	struct token tok;    /*!< @brief The token value of the scan result */
+	struct location loc; /*!< @brief The location of the token in the source code */
 };
 
 /**
@@ -21,9 +21,9 @@ struct scan_result
  */
 struct scanner
 {
-	FILE* source;        /*!< The source code file */
-	char lookahead;      /*!< The lookahead character */
-	struct location loc; /*!< The current location in the source code */
+	FILE* source;        /*!< @brief The source code file */
+	char lookahead;      /*!< @brief The lookahead character */
+	struct location loc; /*!< @brief The current location in the source code */
 };
 
 /**

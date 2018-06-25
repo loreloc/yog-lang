@@ -29,9 +29,9 @@ enum error_type
  */
 struct error
 {
-	struct location loc;      /*!< The location in the source code */
-	enum error_type type;     /*!< The type of the error */
-	char msg[ERROR_MSG_SIZE]; /*!< An helpful message */
+	struct location loc;      /*!< @brief The location in the source code */
+	enum error_type type;     /*!< @brief The type of the error */
+	char msg[ERROR_MSG_SIZE]; /*!< @brief An helpful message */
 };
 
 /**
@@ -39,8 +39,8 @@ struct error
  */
 struct error_handler
 {
-	size_t errs_cnt;    /*!< The number of errors registered */
-	struct error *errs; /*!< The errors array */
+	size_t errs_cnt;    /*!< @brief The number of errors registered */
+	struct error *errs; /*!< @brief The errors array */
 };
 
 /**
