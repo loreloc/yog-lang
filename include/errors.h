@@ -39,8 +39,8 @@ struct error
  */
 struct error_handler
 {
-	size_t errors_cnt;    /*!< The number of errors registered */
-	struct error *errors; /*!< The errors array */
+	size_t errs_cnt;    /*!< The number of errors registered */
+	struct error *errs; /*!< The errors array */
 };
 
 /**

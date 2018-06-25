@@ -84,9 +84,9 @@ int main(int argc, char* argv[])
 	printf("\n");
 
 	// check for errors
-	for(size_t i = 0; i < err_hnd.errors_cnt; ++i)
+	for(size_t i = 0; i < err_hnd.errs_cnt; ++i)
 	{
-		const struct error err = err_hnd.errors[i];
+		const struct error err = err_hnd.errs[i];
 		printf("LEXICAL ERROR \"%s\" at %lu, %lu\n", err.msg, err.loc.row, err.loc.col);
 	}
 
