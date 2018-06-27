@@ -41,7 +41,7 @@ void scanner_init(struct scanner *scn, FILE *source)
 	scn->loc.row = scn->loc.col = 1;
 }
 
-bool scan(struct scan_result *res, struct scanner *scn, struct error_handler *err_hnd)
+bool scan(struct scan_result *res, struct scanner *scn, struct symbol_table *st, struct error_handler *err_hnd)
 {
 	char text[TEXT_SIZE] = { '\0' };
 	size_t text_len = 0;
@@ -149,6 +149,11 @@ bool scan(struct scan_result *res, struct scanner *scn, struct error_handler *er
 			error_handler_add(err_hnd, text_loc, ERROR_LEXICAL, text);
 			return false;
 	}
+
+	// if the token is an identifier, update the symbol table
+	if(res->tok.type == TOKEN_IDENTIFIER)
+		if(symbol_table_find(*st, res->tok.id) == NULL)
+			symbol_table_add(st, res->tok.id);
 
 	return true;
 }

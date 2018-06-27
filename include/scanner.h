@@ -4,6 +4,7 @@
 #pragma once
 
 #include <stdio.h>
+#include "symtable.h"
 #include "errors.h"
 #include "token.h"
 
@@ -37,8 +38,9 @@ void scanner_init(struct scanner *scn, FILE *source);
  * @brief Execute a lexical analysis step
  * @param res A pointer to the scan result
  * @param scn A pointer to the lexical analyser
+ * @param st A pointer to the symbol table
  * @param err_hnd A pointer to the error handler
  * @return false if an error occured, true otherwise
  */
-bool scan(struct scan_result *res, struct scanner *scn, struct error_handler *err_hnd);
+bool scan(struct scan_result *res, struct scanner *scn, struct symbol_table *st, struct error_handler *err_hnd);
 
