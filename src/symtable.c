@@ -81,7 +81,7 @@ void symbol_table_add(struct symbol_table *st, const char* id)
 
 // Pearson 8-bit hash algorithm
 // https://en.wikipedia.org/wiki/Pearson_hashing
-uint8_t hash_str(const char* str)
+uint8_t hash_str(const char *str)
 {
 	static const uint8_t Lookup_Table[256] =
 	{
