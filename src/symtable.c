@@ -1,6 +1,8 @@
 
 #include "symtable.h"
 
+#define ST_BUCKETS_MAX 256
+
 uint8_t hash_str(const char *str);
 void rehash(struct symbol_table *st, size_t cnt);
 
@@ -72,7 +74,7 @@ void symbol_table_add(struct symbol_table *st, const char* id)
 	double weight = (double)st->symbols_cnt / st->buckets_cnt;
 
 	// check if the weight is too much
-	if(weight > 1.0 && st->buckets_cnt < ST_BUCKETS_MAX)
+	if(weight > 0.75 && st->buckets_cnt < ST_BUCKETS_MAX)
 		rehash(st, 2 * st->buckets_cnt);
 }
 

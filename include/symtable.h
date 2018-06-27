@@ -9,9 +9,6 @@
 #include <stdbool.h>
 #include "config.h"
 
-/*! @brief The number of buckets of the symbol table */
-#define ST_BUCKETS_MAX 256
-
 /**
  * @brief The possible types of a symbol
  */
