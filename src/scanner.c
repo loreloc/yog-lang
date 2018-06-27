@@ -206,6 +206,10 @@ struct token get_token_word(char *text)
 		res.type = TOKEN_END;
 	else if(strcmp(text, "int") == 0)
 		res.type = TOKEN_INT;
+	else if(strcmp(text, "read") == 0)
+		res.type = TOKEN_READ;
+	else if(strcmp(text, "write") == 0)
+		res.type = TOKEN_WRITE;
 	else
 	{
 		res.type = TOKEN_IDENTIFIER;

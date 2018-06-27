@@ -55,6 +55,12 @@ int main(int argc, char* argv[])
 			case TOKEN_INT:
 				printf("KEYWORD:\tint\n");
 				break;
+			case TOKEN_READ:
+				printf("KEYWORD:\tread\n");
+				break;
+			case TOKEN_WRITE:
+				printf("KEYWORD:\twrite\n");
+				break;
 			case TOKEN_COLON:
 				printf("PUNCTUATION:\t:\n");
 				break;

@@ -4,6 +4,9 @@ var
 	b : int;
 	c : int;
 begin
+	read a;
+	read b;
 	c = a + b;
+	write c;
 end
 
