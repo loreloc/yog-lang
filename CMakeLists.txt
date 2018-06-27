@@ -23,8 +23,11 @@ set(YOG_SRC ${YOG_SRC_DIR}/yog.c
             ${YOG_SRC_DIR}/errors.c
             ${YOG_SRC_DIR}/scanner.c)
 
-# set c compiler flags
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -O2")
+# set c compiler debug flags
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -std=c99 -Wall -Wextra -g")
+
+# set c compiler release flags
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -std=c99 -Wall -Wextra -O2")
 
 # yog interpreter executable
 add_executable(yog ${YOG_SRC})
