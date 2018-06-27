@@ -90,29 +90,19 @@ int main(int argc, char* argv[])
 	// print the symbol table
 	for(size_t i = 0; i < st.buckets_cnt; ++i)
 	{
-		const struct symbol *tmp = st.buckets[i];
+		printf("%lu) ", i);
 
+		const struct symbol *tmp = st.buckets[i];
 		while(tmp != NULL)
 		{
-			printf("%s\t\t", tmp->id);
-
-			switch(tmp->type)
-			{
-				case SYMBOL_UNKNOW:
-					printf("unknow");
-					break;
-				default: // case SYMBOL_INTEGER:
-					printf("integer");
-					break;
-			}
-
-			printf("\n");
-
+			printf("%s ", tmp->id);
 			tmp = tmp->next;
 		}
+
+		printf("\n");
 	}
 
-	printf("\nerror list:\n");
+	printf("error list:\n");
 
 	// print the error list
 	struct error *tmp = err_hnd.head;

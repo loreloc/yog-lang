@@ -12,9 +12,6 @@
 /*! @brief The number of buckets of the symbol table */
 #define ST_BUCKETS_MAX 256
 
-/*! @brief The weight threshold that causes a rehash of the symbol table */
-#define ST_WEIGHT_THRESHOLD 2.0f
-
 /**
  * @brief The possible types of a symbol
  */
@@ -71,10 +68,4 @@ struct symbol *symbol_table_find(struct symbol_table st, const char* id);
  * @brief id The identifier of the symbol to add
  */
 void symbol_table_add(struct symbol_table *st, const char* name);
-
-/**
- * @brief Reash a symbol table
- * @param st A pointer to the symbol table to reash
- */
-void symbol_table_rehash(struct symbol_table *st);
 

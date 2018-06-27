@@ -2,6 +2,7 @@
 #include "symtable.h"
 
 uint8_t hash_str(const char *str);
+void rehash(struct symbol_table *st, size_t cnt);
 
 void symbol_table_init(struct symbol_table *st)
 {
@@ -53,17 +54,6 @@ struct symbol *symbol_table_find(struct symbol_table st, const char* id)
 
 void symbol_table_add(struct symbol_table *st, const char* id)
 {
-	// calculate the symbol table weight
-	float weight = (float)st->symbols_cnt / st->buckets_cnt;
-
-	// check if the weight is too much
-	if(weight > ST_WEIGHT_THRESHOLD && st->buckets_cnt < ST_BUCKETS_MAX)
-	{
-		// check if there are already too much buckets
-		if(st->buckets_cnt < ST_BUCKETS_MAX)
-			symbol_table_rehash(st);
-	}
-
 	// allocate the new symbol node
 	struct symbol *new_symbol = malloc(sizeof(struct symbol));
 	new_symbol->type = SYMBOL_UNKNOW;
@@ -77,6 +67,13 @@ void symbol_table_add(struct symbol_table *st, const char* id)
 	st->buckets[index] = new_symbol;
 
 	st->symbols_cnt++;
+
+	// calculate the symbol table weight
+	double weight = (double)st->symbols_cnt / st->buckets_cnt;
+
+	// check if the weight is too much
+	if(weight > 1.0 && st->buckets_cnt < ST_BUCKETS_MAX)
+		rehash(st, 2 * st->buckets_cnt);
 }
 
 // Pearson 8-bit hash algorithm
@@ -114,14 +111,12 @@ uint8_t hash_str(const char* str)
 	return hash;
 }
 
-void symbol_table_rehash(struct symbol_table *st)
+void rehash(struct symbol_table *st, size_t cnt)
 {
 	struct symbol_table new_st;
 
-	// calculate the number of buckets of the new symbol table
-	new_st.buckets_cnt = st->buckets_cnt * 2;
-
 	// allocate the bucket array of the new symbol table
+	new_st.buckets_cnt = cnt;
 	new_st.buckets = malloc(new_st.buckets_cnt * sizeof(struct symbol *));
 
 	// initialize the symbol lists of the buckets
