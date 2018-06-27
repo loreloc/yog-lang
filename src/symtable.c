@@ -5,16 +5,11 @@ uint8_t hash_str(const char *str);
 
 void symbol_table_init(struct symbol_table *st)
 {
-	// allocate the symbol lists buckets array
 	st->buckets_cnt = 1;
 	st->buckets = malloc(st->buckets_cnt * sizeof(struct symbol *));
 
-	// initialize the buckets
 	st->buckets[0] = NULL;
-
-	// intitialize the number of symbols and the weight of the symbol table
 	st->symbols_cnt = 0;
-	st->weight = 0.0f;
 }
 
 void symbol_table_clear(struct symbol_table *st)
@@ -32,26 +27,22 @@ void symbol_table_clear(struct symbol_table *st)
 		}
 	}
 
-	// clear the buckets array
 	free(st->buckets);
 	st->buckets = NULL;
 	st->buckets_cnt = 0;
-
-	// reset the number of symbols and the weight of the symbol table
 	st->symbols_cnt = 0;
-	st->weight = 0.0f;
 }
 
-struct symbol *symbol_table_find(struct symbol_table st, const char* name)
+struct symbol *symbol_table_find(struct symbol_table st, const char* id)
 {
 	// calculate the bucket index
-	const uint8_t bck_index = hash_str(name) & (st.buckets_cnt - 1);
+	const uint8_t index = hash_str(id) & (st.buckets_cnt - 1);
 
 	// find the symbol in the bucket
-	struct symbol *tmp = st.buckets[bck_index];
+	struct symbol *tmp = st.buckets[index];
 	while(tmp != NULL)
 	{
-		if(strcmp(tmp->name, name) == 0)
+		if(strcmp(tmp->id, id) == 0)
 			return tmp;
 
 		tmp = tmp->next;
@@ -60,36 +51,32 @@ struct symbol *symbol_table_find(struct symbol_table st, const char* name)
 	return NULL;
 }
 
-void symbol_table_add(struct symbol_table *st, const char* name)
+void symbol_table_add(struct symbol_table *st, const char* id)
 {
+	// calculate the symbol table weight
+	float weight = (float)st->symbols_cnt / st->buckets_cnt;
+
 	// check if the weight is too much
-	if(st->weight > ST_WEIGHT_THRESHOLD)
+	if(weight > ST_WEIGHT_THRESHOLD && st->buckets_cnt < ST_BUCKETS_MAX)
 	{
 		// check if there are already too much buckets
-		if(st->buckets_cnt < ST_BUCKETS_MAX_CNT)
-		{
-			struct symbol_table new_st;
-			symbol_table_reash(*st, &new_st);
-			symbol_table_clear(st);
-
-			*st = new_st;
-		}
+		if(st->buckets_cnt < ST_BUCKETS_MAX)
+			symbol_table_rehash(st);
 	}
 
+	// allocate the new symbol node
+	struct symbol *new_symbol = malloc(sizeof(struct symbol));
+	new_symbol->type = SYMBOL_UNKNOW;
+	strcpy(new_symbol->id, id);
+
 	// calculate the bucket index
-	const uint8_t bck_index = hash_str(name) & (st->buckets_cnt - 1);
+	const uint8_t index = hash_str(id) & (st->buckets_cnt - 1);
 
-	// allocate the new symbol to add in the bucket
-	struct symbol *new_sym = malloc(sizeof(struct symbol));
-	strncpy(new_sym->name, name, ID_STR_SIZE);
+	// add the new symbol node in the bucket
+	new_symbol->next = st->buckets[index];
+	st->buckets[index] = new_symbol;
 
-	// add the new symbol in the bucket
-	new_sym->next = st->buckets[bck_index];
-	st->buckets[bck_index] = new_sym;
-
-	// increment the number of symbols and recalculate the weight of the symbol table
 	st->symbols_cnt++;
-	st->weight = (float)st->symbols_cnt / st->buckets_cnt;
 }
 
 // Pearson 8-bit hash algorithm
@@ -127,28 +114,35 @@ uint8_t hash_str(const char* str)
 	return hash;
 }
 
-void symbol_table_reash(struct symbol_table st_in, struct symbol_table *st_out)
+void symbol_table_rehash(struct symbol_table *st)
 {
+	struct symbol_table new_st;
+
 	// calculate the number of buckets of the new symbol table
-	st_out->buckets_cnt = st_in.buckets_cnt * 2;
+	new_st.buckets_cnt = st->buckets_cnt * 2;
 
 	// allocate the bucket array of the new symbol table
-	st_out->buckets = malloc(st_out->buckets_cnt * sizeof(struct symbol *));
-	
-	// initialize the symbol lists of the buckets
-	for(size_t i = 0; i < st_out->buckets_cnt; ++i)
-		st_out->buckets[i] = NULL;
+	new_st.buckets = malloc(new_st.buckets_cnt * sizeof(struct symbol *));
 
-	// copy the symbols from the input symbol table to the output symbol table
-	for(size_t i = 0; i < st_in.buckets_cnt; ++i)
+	// initialize the symbol lists of the buckets
+	for(size_t i = 0; i < new_st.buckets_cnt; ++i)
+		new_st.buckets[i] = NULL;
+
+	new_st.symbols_cnt = 0;
+
+	// copy the symbols from the old symbol table to the new symbol table
+	for(size_t i = 0; i < st->buckets_cnt; ++i)
 	{
-		struct symbol *tmp = st_in.buckets[i];
+		struct symbol *tmp = st->buckets[i];
 
 		while(tmp != NULL)
 		{
-			symbol_table_add(st_out, tmp->name);
+			symbol_table_add(&new_st, tmp->id);
 			tmp = tmp->next;
 		}
 	}
+
+	symbol_table_clear(st);
+	*st = new_st;
 }
 

@@ -64,18 +64,15 @@ bool scan(struct scan_result *res, struct scanner *scn, struct symbol_table *st,
 			scn->lookahead = '\0';
 		}
 
-		// check for the end of the source file
 		if(feof(scn->source))
 			return false;
 
-		// change the state
 		state = next_state(state, identify_char(character));
 
-		// update the scanner location
 		update_cursor(&scn->loc, character);
 	}
 
-	// initialize the result location
+	// initialize the result token location
 	text_loc.row = scn->loc.row;
 	text_loc.col = scn->loc.col-1;
 
@@ -84,14 +81,11 @@ bool scan(struct scan_result *res, struct scanner *scn, struct symbol_table *st,
 
 	while(true)
 	{
-		// read the next character
 		character = fgetc(scn->source);
 
-		// check fo the end of the source file
 		if(feof(scn->source))
 			break;
 
-		// get the next state of the automata
 		enum fsa_state new_state = next_state(state, identify_char(character));
 
 		// check if the new state is final
@@ -101,16 +95,11 @@ bool scan(struct scan_result *res, struct scanner *scn, struct symbol_table *st,
 			break;
 		}
 
-		// change the state
 		state = new_state;
 
 		if(text_len < TEXT_SIZE)
-		{
-			// add the read character to the text
 			text[text_len++] = character;
-		}
 
-		// update the scanner location
 		update_cursor(&scn->loc, character);
 	}
 
@@ -126,29 +115,27 @@ bool scan(struct scan_result *res, struct scanner *scn, struct symbol_table *st,
 	{
 		case FSA_LITERAL:
 			res->tok.type = TOKEN_LITERAL;
-			res->tok.lit = atoi(text);
-			res->loc = text_loc;
+			res->tok.lit  = atoi(text);
 			break;
 		case FSA_WORD:
 			res->tok = get_token_word(text);
-			res->loc = text_loc;
 			break;
 		case FSA_OPERATOR:
 			res->tok = get_token_operator(text);
-			res->loc = text_loc;
 			break;
 		case FSA_COLON:
 			res->tok.type = TOKEN_COLON;
-			res->loc = text_loc;
 			break;
 		case FSA_SEMICOLON:
 			res->tok.type = TOKEN_SEMICOLON;
-			res->loc = text_loc;
 			break;
 		default:
 			error_handler_add(err_hnd, text_loc, ERROR_LEXICAL, text);
 			return false;
 	}
+
+	// initialize the result token location
+	res->loc = text_loc;
 
 	// if the token is an identifier, update the symbol table
 	if(res->tok.type == TOKEN_IDENTIFIER)
@@ -204,7 +191,6 @@ enum fsa_state next_state(enum fsa_state state, enum char_class class)
 		/* ERROR     */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ERROR  }
 	};
 
-	// return the next state of the finite state automata
 	return Transition_Table[(size_t)state][(size_t)class];
 }
 
@@ -223,7 +209,7 @@ struct token get_token_word(char *text)
 	else
 	{
 		res.type = TOKEN_IDENTIFIER;
-		strncpy(res.id, text, ID_STR_SIZE);
+		strcpy(res.id, text);
 	}
 
 	return res;

@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
 		if(!scan(&res, &scn, &st, &err_hnd))
 			continue;
 
-		printf("%ld %ld\t", res.loc.row, res.loc.col);
+		printf("%ld, %ld\t", res.loc.row, res.loc.col);
 
 		switch(res.tok.type)
 		{
@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
 
 		while(tmp != NULL)
 		{
-			printf("%s\t\t", tmp->name);
+			printf("%s\t\t", tmp->id);
 
 			switch(tmp->type)
 			{
@@ -114,17 +114,17 @@ int main(int argc, char* argv[])
 
 	printf("\nerror list:\n");
 
-	// check for errors
-	for(size_t i = 0; i < err_hnd.errors_cnt; ++i)
+	// print the error list
+	struct error *tmp = err_hnd.head;
+	while(tmp != NULL)
 	{
-		const struct error err = err_hnd.errors[i];
-		printf("LEXICAL ERROR \"%s\" at %lu, %lu\n", err.msg, err.loc.row, err.loc.col);
+		printf("LEXICAL ERROR \"%s\" at %lu, %lu\n", tmp->msg, tmp->loc.row, tmp->loc.col);
+
+		tmp = tmp->next;
 	}
 
-	// clear the error handler
+	symbol_table_clear(&st);
 	error_handler_clear(&err_hnd);
-
-	// close the source file
 	fclose(source);
 
 	return 0;

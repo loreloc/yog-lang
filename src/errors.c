@@ -3,30 +3,39 @@
 
 void error_handler_init(struct error_handler *err_hnd)
 {
-	err_hnd->errors_cnt = 0;
-	err_hnd->errors = malloc(ERRORS_MAX_CNT * sizeof(struct error));
+	err_hnd->head = err_hnd->tail = NULL;
 }
 
 void error_handler_clear(struct error_handler *err_hnd)
 {
-	// free the error array
-	free(err_hnd->errors);
-	err_hnd->errors = NULL;
-	err_hnd->errors_cnt = 0;
+	// clear the error list
+	struct error *tmp;
+	while(err_hnd->head != NULL)
+	{
+		tmp = err_hnd->head;
+		err_hnd->head = tmp->next;
+		free(tmp);
+	}
 }
 
-bool error_handler_add(struct error_handler *err_hnd, struct location loc, enum error_type type, const char *msg)
+void error_handler_add(struct error_handler *err_hnd, struct location loc, enum error_type type, const char *msg)
 {
-	// check for errors overflow
-	if(err_hnd->errors_cnt >= ERRORS_MAX_CNT)
-		return false;
+	// allocate a new error node
+	struct error *new_error = malloc(sizeof(struct error));
+	new_error->next = NULL;
+	new_error->loc = loc;
+	new_error->type = type;
+	strcpy(new_error->msg, msg);
 
-	// add a new error to the error array
-	const size_t new_err_index = err_hnd->errors_cnt++;
-	err_hnd->errors[new_err_index].loc = loc;
-	err_hnd->errors[new_err_index].type = type;
-	strncpy(err_hnd->errors[new_err_index].msg, msg, ERROR_MSG_SIZE);
-
-	return true;
+	// add the new error node to the error list
+	if(err_hnd->head)
+	{
+		err_hnd->tail->next = new_error;
+		err_hnd->tail = new_error;
+	}
+	else
+	{
+		err_hnd->head = err_hnd->tail = new_error;
+	}
 }
 

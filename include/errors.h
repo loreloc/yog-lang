@@ -10,9 +10,6 @@
 #include "config.h"
 #include "location.h"
 
-/*! @brief The maximum number of errors that an error handler can hold */
-#define ERRORS_MAX_CNT 128
-
 /*! @brief The maximum size of the error message string */
 #define ERROR_MSG_SIZE ID_STR_SIZE
 
@@ -32,6 +29,7 @@ struct error
 	struct location loc;      /*!< @brief The location in the source code */
 	enum error_type type;     /*!< @brief The type of the error */
 	char msg[ERROR_MSG_SIZE]; /*!< @brief An helpful message */
+	struct error *next;       /*!< @brief The next error in the error list */
 };
 
 /**
@@ -39,8 +37,8 @@ struct error
  */
 struct error_handler
 {
-	size_t errors_cnt;    /*!< @brief The number of errors registered */
-	struct error *errors; /*!< @brief The errors array */
+	struct error *head; /*!< @brief The error list head */
+	struct error *tail; /*!< @brief The error list tail */
 };
 
 /**
@@ -51,7 +49,7 @@ void error_handler_init(struct error_handler *err_hnd);
 
 /**
  * @brief Clear the resources holded by an error handler
- * @param err_hnd A pointer to the error handler to clean
+ * @param err_hnd A pointer to the error handler to clear
  */
 void error_handler_clear(struct error_handler *err_hnd);
 
@@ -63,6 +61,6 @@ void error_handler_clear(struct error_handler *err_hnd);
  * @param msg The helpful message string
  * @return false if an error occured, true otherwise
  */
-bool error_handler_add(struct error_handler *err_hnd, struct location loc, enum error_type type, const char* msg);
+void error_handler_add(struct error_handler *err_hnd, struct location loc, enum error_type type, const char* msg);
 
 
