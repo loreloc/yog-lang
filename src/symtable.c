@@ -1,6 +1,7 @@
 
 #include "symtable.h"
 
+#define ST_BUCKETS_MIN   4
 #define ST_BUCKETS_MAX 256
 
 uint8_t hash_str(const char *str);
@@ -8,7 +9,7 @@ void rehash(struct symbol_table *st, size_t cnt);
 
 void symbol_table_init(struct symbol_table *st)
 {
-	st->buckets_cnt = 1;
+	st->buckets_cnt = ST_BUCKETS_MIN;
 	st->buckets = malloc(st->buckets_cnt * sizeof(struct symbol *));
 
 	st->buckets[0] = NULL;
