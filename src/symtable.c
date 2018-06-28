@@ -145,7 +145,7 @@ void rehash(struct symbol_table *st, size_t cnt)
 			// add the new symbol node in the bucket
 			tmp->next = new_st.buckets[index];
 			new_st.buckets[index] = tmp;
-			st->symbols_cnt++;
+			new_st.symbols_cnt++;
 
 			tmp = tmp_next;
 		}
