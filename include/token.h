@@ -4,7 +4,7 @@
 #pragma once
 
 #include <stdint.h>
-#include "config.h"
+#include "symtable.h"
 
 /**
  * @brief The possible types of a token
@@ -38,7 +38,8 @@ struct token
 	union
 	{
 		int64_t lit; /*!< @brief The literal field */
-		id_ptr_t id; /*!< @brief The identifier field */
+
+		struct symbol *sym; /*!< @brief The symbol pointer field */
 	};
 };
 

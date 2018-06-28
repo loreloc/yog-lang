@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
 				printf("LITERAL:\t%ld\n", res.tok.lit);
 				break;
 			case TOKEN_IDENTIFIER:
-				printf("IDENTIFIER:\t%s\n", res.tok.id);
+				printf("IDENTIFIER:\t%s\n", res.tok.sym->id);
 				break;
 			case TOKEN_PLUS:
 				printf("OPERATOR:\t+\n");

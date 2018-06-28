@@ -216,7 +216,7 @@ struct token get_token_word(char *text, struct symbol_table *st)
 		if(!sym)
 			sym = symbol_table_add(st, text);
 
-		res.id = sym->id;
+		res.sym = sym;
 	}
 
 	return res;
