@@ -34,9 +34,9 @@ int main(int argc, char* argv[])
 	// execute the lexical analysis
 	while(!feof(source))
 	{
-		struct scan_result res;
+		struct lex_result res;
 
-		if(!scan(&res, &scn, &st, &err_hnd))
+		if(!scanner_lex(&res, &scn, &st, &err_hnd))
 			continue;
 
 		printf("%ld, %ld\t", res.loc.row, res.loc.col);

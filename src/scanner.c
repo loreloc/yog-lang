@@ -41,7 +41,7 @@ void scanner_init(struct scanner *scn, FILE *source)
 	scn->loc.row = scn->loc.col = 1;
 }
 
-bool scan(struct scan_result *res, struct scanner *scn, struct symbol_table *st, struct error_handler *err_hnd)
+bool scanner_lex(struct lex_result *res, struct scanner *scn, struct symbol_table *st, struct error_handler *err_hnd)
 {
 	char text[TEXT_SIZE] = { '\0' };
 	size_t text_len = 0;

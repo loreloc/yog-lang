@@ -9,11 +9,11 @@
 #include "token.h"
 
 /**
- * @brief The result of the scan function
+ * @brief The result of a lexical analysis step
  */
-struct scan_result
+struct lex_result
 {
-	struct token tok;    /*!< @brief The token value of the scan result */
+	struct token tok;    /*!< @brief The token value */
 	struct location loc; /*!< @brief The location of the token in the source code */
 };
 
@@ -36,11 +36,11 @@ void scanner_init(struct scanner *scn, FILE *source);
 
 /**
  * @brief Execute a lexical analysis step
- * @param res A pointer to the scan result
+ * @param res A pointer to the result
  * @param scn A pointer to the lexical analyser
  * @param st A pointer to the symbol table
  * @param err_hnd A pointer to the error handler
  * @return false if an error occured, true otherwise
  */
-bool scan(struct scan_result *res, struct scanner *scn, struct symbol_table *st, struct error_handler *err_hnd);
+bool scanner_lex(struct lex_result *res, struct scanner *scn, struct symbol_table *st, struct error_handler *err_hnd);
 
