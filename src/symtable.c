@@ -55,7 +55,7 @@ struct symbol *symbol_table_find(struct symbol_table st, const char* id)
 	return NULL;
 }
 
-void symbol_table_add(struct symbol_table *st, const char* id)
+struct symbol *symbol_table_add(struct symbol_table *st, const char* id)
 {
 	// allocate the new symbol node
 	struct symbol *new_symbol = malloc(sizeof(struct symbol));
@@ -68,7 +68,6 @@ void symbol_table_add(struct symbol_table *st, const char* id)
 	// add the new symbol node in the bucket
 	new_symbol->next = st->buckets[index];
 	st->buckets[index] = new_symbol;
-
 	st->symbols_cnt++;
 
 	// calculate the symbol table weight
@@ -77,6 +76,8 @@ void symbol_table_add(struct symbol_table *st, const char* id)
 	// check if the weight is too much
 	if(weight > 0.75 && st->buckets_cnt < ST_BUCKETS_MAX)
 		rehash(st, 2 * st->buckets_cnt);
+
+	return new_symbol;
 }
 
 // Pearson 8-bit hash algorithm
@@ -135,12 +136,21 @@ void rehash(struct symbol_table *st, size_t cnt)
 
 		while(tmp != NULL)
 		{
-			symbol_table_add(&new_st, tmp->id);
-			tmp = tmp->next;
+			// save the pointer to the next symbol
+			struct symbol *tmp_next = tmp->next;
+
+			// calculate the new bucket index
+			const uint8_t index = hash_str(tmp->id) & (new_st.buckets_cnt - 1);
+
+			// add the new symbol node in the bucket
+			tmp->next = new_st.buckets[index];
+			new_st.buckets[index] = tmp;
+			st->symbols_cnt++;
+
+			tmp = tmp_next;
 		}
 	}
 
-	symbol_table_clear(st);
 	*st = new_st;
 }
 

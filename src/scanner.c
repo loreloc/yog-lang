@@ -31,7 +31,7 @@ enum char_class
 void update_cursor(struct location *loc, char c);
 enum char_class identify_char(char c);
 enum fsa_state next_state(enum fsa_state state, enum char_class class);
-struct token get_token_word(char *text);
+struct token get_token_word(char *text, struct symbol_table *st);
 struct token get_token_operator(char *text);
 
 void scanner_init(struct scanner *scn, FILE *source)
@@ -118,7 +118,7 @@ bool scanner_lex(struct lex_result *res, struct scanner *scn, struct symbol_tabl
 			res->tok.lit  = atoi(text);
 			break;
 		case FSA_WORD:
-			res->tok = get_token_word(text);
+			res->tok = get_token_word(text, st);
 			break;
 		case FSA_OPERATOR:
 			res->tok = get_token_operator(text);
@@ -136,11 +136,6 @@ bool scanner_lex(struct lex_result *res, struct scanner *scn, struct symbol_tabl
 
 	// initialize the result token location
 	res->loc = text_loc;
-
-	// if the token is an identifier, update the symbol table
-	if(res->tok.type == TOKEN_IDENTIFIER)
-		if(symbol_table_find(*st, res->tok.id) == NULL)
-			symbol_table_add(st, res->tok.id);
 
 	return true;
 }
@@ -194,7 +189,7 @@ enum fsa_state next_state(enum fsa_state state, enum char_class class)
 	return Transition_Table[(size_t)state][(size_t)class];
 }
 
-struct token get_token_word(char *text)
+struct token get_token_word(char *text, struct symbol_table *st)
 {
 	struct token res;
 
@@ -213,7 +208,15 @@ struct token get_token_word(char *text)
 	else
 	{
 		res.type = TOKEN_IDENTIFIER;
-		strcpy(res.id, text);
+		
+		// find the identifier in the symbol table
+		struct symbol *sym = symbol_table_find(*st, text);
+
+		// if the symbol isn't found add it to the symbol table
+		if(!sym)
+			sym = symbol_table_add(st, text);
+
+		res.id = sym->id;
 	}
 
 	return res;

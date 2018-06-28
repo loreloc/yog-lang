@@ -38,8 +38,7 @@ struct token
 	union
 	{
 		int64_t lit; /*!< @brief The literal field */
-
-		char id[ID_STR_SIZE]; /*!< @brief The identifier field */
+		id_ptr_t id; /*!< @brief The identifier field */
 	};
 };
 

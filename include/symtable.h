@@ -23,9 +23,9 @@ enum symbol_type
  */
 struct symbol
 {
-	enum symbol_type type;  /*!< @brief The type of the symbol */
-	char id[ID_STR_SIZE]; /*!< @brief The identifier of the symbol */
-	struct symbol *next;    /*!< @brief The next symbol in the bucket */
+	enum symbol_type type; /*!< @brief The type of the symbol */
+	char id[ID_STR_SIZE];  /*!< @brief The identifier of the symbol */
+	struct symbol *next;   /*!< @brief The next symbol in the bucket */
 };
 
 /**
@@ -63,6 +63,7 @@ struct symbol *symbol_table_find(struct symbol_table st, const char* id);
  * @brief Add a new symbol in a symbol table
  * @brief st A pointer to the symbol table to modify
  * @brief id The identifier of the symbol to add
+ * @return A pointer to the new symbol
  */
-void symbol_table_add(struct symbol_table *st, const char* name);
+struct symbol *symbol_table_add(struct symbol_table *st, const char* name);
 
