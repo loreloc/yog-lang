@@ -27,21 +27,21 @@ int main(int argc, char* argv[])
 	struct symbol_table st;
 	symbol_table_init(&st);
 
-	// initialize the scanner
-	struct scanner scn;
-	scanner_init(&scn, source);
+	// initialize the lexical context
+	struct lex_context lex_ctx;
+	lex_context_init(&lex_ctx, source);
 
 	// execute the lexical analysis
 	while(!feof(source))
 	{
-		struct lex_result res;
+		struct token tok;
 
-		if(!scanner_lex(&res, &scn, &st, &err_hnd))
+		if(!lex(&tok, &lex_ctx, &st, &err_hnd))
 			continue;
 
-		printf("%ld, %ld\t", res.loc.row, res.loc.col);
+		printf("%ld, %ld\t", tok.loc.row, tok.loc.col);
 
-		switch(res.tok.type)
+		switch(tok.type)
 		{
 			case TOKEN_VAR:
 				printf("KEYWORD:\tvar\n");
@@ -68,10 +68,10 @@ int main(int argc, char* argv[])
 				printf("PUNCTUATION:\t;\n");
 				break;
 			case TOKEN_LITERAL:
-				printf("LITERAL:\t%ld\n", res.tok.lit);
+				printf("LITERAL:\t%ld\n", tok.lit);
 				break;
 			case TOKEN_IDENTIFIER:
-				printf("IDENTIFIER:\t%s\n", res.tok.sym->id);
+				printf("IDENTIFIER:\t%s\n", tok.sym->id);
 				break;
 			case TOKEN_PLUS:
 				printf("OPERATOR:\t+\n");

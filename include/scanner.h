@@ -4,23 +4,13 @@
 #pragma once
 
 #include <stdio.h>
-#include "symtable.h"
 #include "errors.h"
 #include "token.h"
 
 /**
- * @brief The result of a lexical analysis step
+ * @brief The lexical context
  */
-struct lex_result
-{
-	struct token tok;    /*!< @brief The token value */
-	struct location loc; /*!< @brief The location of the token in the source code */
-};
-
-/**
- * @brief The lexical analyser
- */
-struct scanner
+struct lex_context
 {
 	FILE* source;        /*!< @brief The source code file */
 	char lookahead;      /*!< @brief The lookahead character */
@@ -28,19 +18,19 @@ struct scanner
 };
 
 /**
- * @brief Initialize a lexical analyser
- * @param scn A pointer to the lexical analyser to initialize
+ * @brief Initialize a lexical context
+ * @param ctx A pointer to the lexical context to initialize
  * @param source The source file pointer
  */
-void scanner_init(struct scanner *scn, FILE *source);
+void lex_context_init(struct lex_context *ctx, FILE *source);
 
 /**
  * @brief Execute a lexical analysis step
- * @param res A pointer to the result
- * @param scn A pointer to the lexical analyser
+ * @param tok A pointer to the token rsult
+ * @param ctx A pointer to the lexical context
  * @param st A pointer to the symbol table
  * @param err_hnd A pointer to the error handler
- * @return false if an error occured, true otherwise
+ * @return false if an error occured or EOF is found, true otherwise
  */
-bool scanner_lex(struct lex_result *res, struct scanner *scn, struct symbol_table *st, struct error_handler *err_hnd);
+bool lex(struct token *tok, struct lex_context *ctx, struct symbol_table *st, struct error_handler *err_hnd);
 

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <stdint.h>
+#include "location.h"
 #include "symtable.h"
 
 /**
@@ -33,12 +33,12 @@ enum token_type
  */
 struct token
 {
+	struct location loc;  /*!< @brief The location of the token in the source code */
 	enum token_type type; /*!< @brief The type of the token */
 
 	union
 	{
-		int64_t lit; /*!< @brief The literal field */
-
+		int64_t lit;        /*!< @brief The literal field */
 		struct symbol *sym; /*!< @brief The symbol pointer field */
 	};
 };

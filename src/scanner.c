@@ -31,17 +31,18 @@ enum char_class
 void update_cursor(struct location *loc, char c);
 enum char_class identify_char(char c);
 enum fsa_state next_state(enum fsa_state state, enum char_class class);
-struct token get_token_word(char *text, struct symbol_table *st);
-struct token get_token_operator(char *text);
+struct token make_token_word(char *text, struct symbol_table *st, struct location loc);
+struct token make_token_operator(char *text, struct location loc);
 
-void scanner_init(struct scanner *scn, FILE *source)
+void lex_context_init(struct lex_context *ctx, FILE *source)
 {
-	scn->source = source;
-	scn->lookahead = '\0';
-	scn->loc.row = scn->loc.col = 1;
+	ctx->source = source;
+	ctx->lookahead = '\0';
+	ctx->loc.row = 1;
+	ctx->loc.col = 1;
 }
 
-bool scanner_lex(struct lex_result *res, struct scanner *scn, struct symbol_table *st, struct error_handler *err_hnd)
+bool lex(struct token *tok, struct lex_context *ctx, struct symbol_table *st, struct error_handler *err_hnd)
 {
 	char text[TEXT_SIZE] = { '\0' };
 	size_t text_len = 0;
@@ -54,36 +55,36 @@ bool scanner_lex(struct lex_result *res, struct scanner *scn, struct symbol_tabl
 	while(state == FSA_START)
 	{
 		// get the next character
-		if(scn->lookahead == '\0')
+		if(ctx->lookahead == '\0')
 		{
-			character = fgetc(scn->source);
+			character = fgetc(ctx->source);
 		}
 		else
 		{
-			character = scn->lookahead;
-			scn->lookahead = '\0';
+			character = ctx->lookahead;
+			ctx->lookahead = '\0';
 		}
 
-		if(feof(scn->source))
+		if(feof(ctx->source))
 			return false;
 
 		state = next_state(state, identify_char(character));
 
-		update_cursor(&scn->loc, character);
+		update_cursor(&ctx->loc, character);
 	}
 
 	// initialize the result token location
-	text_loc.row = scn->loc.row;
-	text_loc.col = scn->loc.col-1;
+	text_loc.row = ctx->loc.row;
+	text_loc.col = ctx->loc.col - 1;
 
 	// add the read character to the text
 	text[text_len++] = character;
 
 	while(true)
 	{
-		character = fgetc(scn->source);
+		character = fgetc(ctx->source);
 
-		if(feof(scn->source))
+		if(feof(ctx->source))
 			break;
 
 		enum fsa_state new_state = next_state(state, identify_char(character));
@@ -91,7 +92,7 @@ bool scanner_lex(struct lex_result *res, struct scanner *scn, struct symbol_tabl
 		// check if the new state is final
 		if(new_state == FSA_ACCEPT)
 		{
-			scn->lookahead = character;
+			ctx->lookahead = character;
 			break;
 		}
 
@@ -100,7 +101,7 @@ bool scanner_lex(struct lex_result *res, struct scanner *scn, struct symbol_tabl
 		if(text_len < TEXT_SIZE)
 			text[text_len++] = character;
 
-		update_cursor(&scn->loc, character);
+		update_cursor(&ctx->loc, character);
 	}
 
 	// check if the text string is too long
@@ -114,28 +115,28 @@ bool scanner_lex(struct lex_result *res, struct scanner *scn, struct symbol_tabl
 	switch(state)
 	{
 		case FSA_LITERAL:
-			res->tok.type = TOKEN_LITERAL;
-			res->tok.lit  = atoi(text);
+			tok->type = TOKEN_LITERAL;
+			tok->lit  = atoi(text);
+			tok->loc = text_loc;
 			break;
 		case FSA_WORD:
-			res->tok = get_token_word(text, st);
+			*tok = make_token_word(text, st, text_loc);
 			break;
 		case FSA_OPERATOR:
-			res->tok = get_token_operator(text);
+			*tok = make_token_operator(text, text_loc);
 			break;
 		case FSA_COLON:
-			res->tok.type = TOKEN_COLON;
+			tok->type = TOKEN_COLON;
+			tok->loc = text_loc;
 			break;
 		case FSA_SEMICOLON:
-			res->tok.type = TOKEN_SEMICOLON;
+			tok->type = TOKEN_SEMICOLON;
+			tok->loc = text_loc;
 			break;
 		default:
 			error_handler_add(err_hnd, text_loc, ERROR_LEXICAL, text);
 			return false;
 	}
-
-	// initialize the result token location
-	res->loc = text_loc;
 
 	return true;
 }
@@ -189,25 +190,25 @@ enum fsa_state next_state(enum fsa_state state, enum char_class class)
 	return Transition_Table[(size_t)state][(size_t)class];
 }
 
-struct token get_token_word(char *text, struct symbol_table *st)
+struct token make_token_word(char *text, struct symbol_table *st, struct location loc)
 {
-	struct token res;
+	struct token tok;
 
 	if(strcmp(text, "var") == 0)
-		res.type = TOKEN_VAR;
+		tok.type = TOKEN_VAR;
 	else if(strcmp(text, "begin") == 0)
-		res.type = TOKEN_BEGIN;
+		tok.type = TOKEN_BEGIN;
 	else if(strcmp(text, "end") == 0)
-		res.type = TOKEN_END;
+		tok.type = TOKEN_END;
 	else if(strcmp(text, "int") == 0)
-		res.type = TOKEN_INT;
+		tok.type = TOKEN_INT;
 	else if(strcmp(text, "read") == 0)
-		res.type = TOKEN_READ;
+		tok.type = TOKEN_READ;
 	else if(strcmp(text, "write") == 0)
-		res.type = TOKEN_WRITE;
+		tok.type = TOKEN_WRITE;
 	else
 	{
-		res.type = TOKEN_IDENTIFIER;
+		tok.type = TOKEN_IDENTIFIER;
 		
 		// find the identifier in the symbol table
 		struct symbol *sym = symbol_table_find(*st, text);
@@ -216,25 +217,41 @@ struct token get_token_word(char *text, struct symbol_table *st)
 		if(!sym)
 			sym = symbol_table_add(st, text);
 
-		res.sym = sym;
+		tok.sym = sym;
 	}
 
-	return res;
+	// initialize the token location
+	tok.loc = loc;
+
+	return tok;
 }
 
-struct token get_token_operator(char *text)
+struct token make_token_operator(char *text, struct location loc)
 {
-	struct token res;
+	struct token tok;
 
 	switch(text[0])
 	{
-		case '+': res.type = TOKEN_PLUS;  break;
-		case '-': res.type = TOKEN_MINUS; break;
-		case '*': res.type = TOKEN_MUL;   break;
-		case '/': res.type = TOKEN_DIV;   break;
-		default:  res.type = TOKEN_EQUAL; break;
+		case '+':
+			tok.type = TOKEN_PLUS;
+			break;
+		case '-':
+			tok.type = TOKEN_MINUS;
+			break;
+		case '*':
+			tok.type = TOKEN_MUL;
+			break;
+		case '/':
+			tok.type = TOKEN_DIV;
+			break;
+		default: // case '=':
+			tok.type = TOKEN_EQUAL;
+			break;
 	}
 
-	return res;
+	// initialize the token location
+	tok.loc = loc;
+
+	return tok;
 }
 
