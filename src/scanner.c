@@ -77,7 +77,9 @@ bool lex(struct token *tok, struct lex_context *ctx, struct symbol_table *st, st
 			// check for text buffer overflow
 			if(text_len == TEXT_SIZE)
 			{
-				state = FSA_ERROR;
+				error_handler_add(err_hnd, text_loc, ERROR_LEXICAL, "TOKEN TOO LONG");
+				memset(text, '\0', TEXT_SIZE);
+				text_len = 0;
 				new_state = FSA_START;
 			}
 			else
