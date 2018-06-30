@@ -25,12 +25,12 @@ struct lex_context
 void lex_context_init(struct lex_context *ctx, FILE *source);
 
 /**
- * @brief Execute a lexical analysis step
+ * @brief Get the next token
  * @param tok A pointer to the token rsult
  * @param ctx A pointer to the lexical context
  * @param st A pointer to the symbol table
  * @param err_hnd A pointer to the error handler
- * @return false if an error occured or EOF is found, true otherwise
+ * @return false if source EOF has been reached, true otherwise
  */
 bool lex(struct token *tok, struct lex_context *ctx, struct symbol_table *st, struct error_handler *err_hnd);
 

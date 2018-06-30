@@ -31,14 +31,12 @@ int main(int argc, char* argv[])
 	struct lex_context lex_ctx;
 	lex_context_init(&lex_ctx, source);
 
+	printf("tokens:\n");
+
 	// execute the lexical analysis
-	while(!feof(source))
+	struct token tok;
+	while(lex(&tok, &lex_ctx, &st, &err_hnd))
 	{
-		struct token tok;
-
-		if(!lex(&tok, &lex_ctx, &st, &err_hnd))
-			continue;
-
 		printf("%ld, %ld\t", tok.loc.row, tok.loc.col);
 
 		switch(tok.type)

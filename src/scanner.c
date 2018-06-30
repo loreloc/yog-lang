@@ -33,6 +33,7 @@ enum char_class identify_char(char c);
 enum fsa_state next_state(enum fsa_state state, enum char_class class);
 struct token make_token_word(char *text, struct symbol_table *st, struct location loc);
 struct token make_token_operator(char *text, struct location loc);
+bool lex_step(struct token *tok, struct lex_context *ctx, struct symbol_table *st, struct error_handler *err_hnd);
 
 void lex_context_init(struct lex_context *ctx, FILE *source)
 {
@@ -44,101 +45,13 @@ void lex_context_init(struct lex_context *ctx, FILE *source)
 
 bool lex(struct token *tok, struct lex_context *ctx, struct symbol_table *st, struct error_handler *err_hnd)
 {
-	char text[TEXT_SIZE] = { '\0' };
-	size_t text_len = 0;
-	struct location text_loc;
+	bool result = false;
 
-	enum fsa_state state = FSA_START;
-	char character;
+	// execute a lexical step until a valid token is found or source EOF is reached
+	while(!result && !feof(ctx->source))
+		result = lex_step(tok, ctx, st, err_hnd);
 
-	// ignore whitespaces
-	while(state == FSA_START)
-	{
-		// get the next character
-		if(ctx->lookahead == '\0')
-		{
-			character = fgetc(ctx->source);
-		}
-		else
-		{
-			character = ctx->lookahead;
-			ctx->lookahead = '\0';
-		}
-
-		if(feof(ctx->source))
-			return false;
-
-		state = next_state(state, identify_char(character));
-
-		update_cursor(&ctx->loc, character);
-	}
-
-	// initialize the result token location
-	text_loc.row = ctx->loc.row;
-	text_loc.col = ctx->loc.col - 1;
-
-	// add the read character to the text
-	text[text_len++] = character;
-
-	while(true)
-	{
-		character = fgetc(ctx->source);
-
-		if(feof(ctx->source))
-			break;
-
-		enum fsa_state new_state = next_state(state, identify_char(character));
-
-		// check if the new state is final
-		if(new_state == FSA_ACCEPT)
-		{
-			ctx->lookahead = character;
-			break;
-		}
-
-		state = new_state;
-
-		if(text_len < TEXT_SIZE)
-			text[text_len++] = character;
-
-		update_cursor(&ctx->loc, character);
-	}
-
-	// check if the text string is too long
-	if(text_len == TEXT_SIZE)
-	{
-		error_handler_add(err_hnd, text_loc, ERROR_LEXICAL, "TEXT OVERFLOW");
-		return false;
-	}
-
-	// construct the result token
-	switch(state)
-	{
-		case FSA_LITERAL:
-			tok->type = TOKEN_LITERAL;
-			tok->lit  = atoi(text);
-			tok->loc = text_loc;
-			break;
-		case FSA_WORD:
-			*tok = make_token_word(text, st, text_loc);
-			break;
-		case FSA_OPERATOR:
-			*tok = make_token_operator(text, text_loc);
-			break;
-		case FSA_COLON:
-			tok->type = TOKEN_COLON;
-			tok->loc = text_loc;
-			break;
-		case FSA_SEMICOLON:
-			tok->type = TOKEN_SEMICOLON;
-			tok->loc = text_loc;
-			break;
-		default:
-			error_handler_add(err_hnd, text_loc, ERROR_LEXICAL, text);
-			return false;
-	}
-
-	return true;
+	return result;
 }
 
 void update_cursor(struct location *loc, char c)
@@ -253,5 +166,104 @@ struct token make_token_operator(char *text, struct location loc)
 	tok.loc = loc;
 
 	return tok;
+}
+
+bool lex_step(struct token *tok, struct lex_context *ctx, struct symbol_table *st, struct error_handler *err_hnd)
+{
+	char text[TEXT_SIZE] = { '\0' };
+	size_t text_len = 0;
+	struct location text_loc;
+
+	enum fsa_state state = FSA_START;
+	char character;
+
+	// ignore whitespaces
+	while(state == FSA_START)
+	{
+		// get the next character
+		if(ctx->lookahead == '\0')
+		{
+			character = fgetc(ctx->source);
+		}
+		else
+		{
+			character = ctx->lookahead;
+			ctx->lookahead = '\0';
+		}
+
+		if(feof(ctx->source))
+			return false;
+
+		state = next_state(state, identify_char(character));
+
+		update_cursor(&ctx->loc, character);
+	}
+
+	// initialize the result token location
+	text_loc.row = ctx->loc.row;
+	text_loc.col = ctx->loc.col - 1;
+
+	// add the read character to the text
+	text[text_len++] = character;
+
+	while(true)
+	{
+		character = fgetc(ctx->source);
+
+		if(feof(ctx->source))
+			break;
+
+		enum fsa_state new_state = next_state(state, identify_char(character));
+
+		// check if the new state is final
+		if(new_state == FSA_ACCEPT)
+		{
+			ctx->lookahead = character;
+			break;
+		}
+
+		state = new_state;
+
+		if(text_len < TEXT_SIZE)
+			text[text_len++] = character;
+
+		update_cursor(&ctx->loc, character);
+	}
+
+	// check if the text string is too long
+	if(text_len == TEXT_SIZE)
+	{
+		error_handler_add(err_hnd, text_loc, ERROR_LEXICAL, "TEXT OVERFLOW");
+		return false;
+	}
+
+	// construct the result token
+	switch(state)
+	{
+		case FSA_LITERAL:
+			tok->type = TOKEN_LITERAL;
+			tok->lit  = atoi(text);
+			tok->loc = text_loc;
+			break;
+		case FSA_WORD:
+			*tok = make_token_word(text, st, text_loc);
+			break;
+		case FSA_OPERATOR:
+			*tok = make_token_operator(text, text_loc);
+			break;
+		case FSA_COLON:
+			tok->type = TOKEN_COLON;
+			tok->loc = text_loc;
+			break;
+		case FSA_SEMICOLON:
+			tok->type = TOKEN_SEMICOLON;
+			tok->loc = text_loc;
+			break;
+		default:
+			error_handler_add(err_hnd, text_loc, ERROR_LEXICAL, text);
+			return false;
+	}
+
+	return true;
 }
 
