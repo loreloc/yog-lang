@@ -2,6 +2,7 @@
 #include "scanner.h"
 
 #define TEXT_SIZE ID_STR_SIZE
+#define TEXT_OVERFLOW_MSG "TOKEN TOO LONG"
 
 // the states of the finite state automata
 enum fsa_state
@@ -66,7 +67,16 @@ bool lex(struct token *tok, struct lex_context *ctx, struct symbol_table *st, st
 
 		// check if source EOF has been reached
 		if(feof(ctx->source))
+		{
+			// check for text buffer overflow
+			if(text_len == TEXT_SIZE)
+			{
+				error_handler_add(err_hnd, text_loc, ERROR_LEXICAL, TEXT_OVERFLOW_MSG);
+				return false;
+			}
+
 			break;
+		}
 
 		// get the next automata state
 		enum fsa_state new_state = next_state(state, identify_char(character));
@@ -77,7 +87,7 @@ bool lex(struct token *tok, struct lex_context *ctx, struct symbol_table *st, st
 			// check for text buffer overflow
 			if(text_len == TEXT_SIZE)
 			{
-				error_handler_add(err_hnd, text_loc, ERROR_LEXICAL, "TOKEN TOO LONG");
+				error_handler_add(err_hnd, text_loc, ERROR_LEXICAL, TEXT_OVERFLOW_MSG);
 				memset(text, '\0', TEXT_SIZE);
 				text_len = 0;
 				new_state = FSA_START;
@@ -99,7 +109,7 @@ bool lex(struct token *tok, struct lex_context *ctx, struct symbol_table *st, st
 		{
 			if(new_state != FSA_ERROR)
 			{
-				const char *err_msg = (text_len < TEXT_SIZE) ? text : "TOKEN TOO LONG";
+				const char *err_msg = (text_len < TEXT_SIZE) ? text : TEXT_OVERFLOW_MSG;
 				error_handler_add(err_hnd, text_loc, ERROR_LEXICAL, err_msg);
 				memset(text, '\0', TEXT_SIZE);
 				text_len = 0;
@@ -114,13 +124,6 @@ bool lex(struct token *tok, struct lex_context *ctx, struct symbol_table *st, st
 
 		// update the lexical context cursor location
 		update_cursor(&ctx->loc, character);
-	}
-
-	// check for text buffer overflow
-	if(text_len == TEXT_SIZE)
-	{
-		error_handler_add(err_hnd, text_loc, ERROR_LEXICAL, "TOKEN TOO LONG");
-		return false;
 	}
 
 	// construct the result token
@@ -191,14 +194,14 @@ enum fsa_state next_state(enum fsa_state state, enum char_class class)
 {
 	static const enum fsa_state Transition_Table[7][7] =
 	{
-		             /*   WHITESPACE  DIGIT        ALPHABETICAL OPERATOR      COLON       SEMICOLON      UNKNOW    */
-		/* START     */ { FSA_START,  FSA_LITERAL, FSA_WORD,    FSA_OPERATOR, FSA_COLON,  FSA_SEMICOLON, FSA_ERROR  },
-		/* LITERAL   */ { FSA_ACCEPT, FSA_LITERAL, FSA_ERROR,   FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT },
-		/* WORD      */ { FSA_ACCEPT, FSA_WORD,    FSA_WORD,    FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT },
-		/* OPERATOR  */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT },
-		/* COLON     */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT },
-		/* SEMICOLON */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT },
-		/* ERROR     */ { FSA_START,  FSA_ERROR,   FSA_ERROR,   FSA_ERROR,    FSA_ERROR,  FSA_ERROR,     FSA_ERROR  }
+		             /*   WHITESPACE  DIGIT        ALPHABETICAL OPERATOR      COLON       SEMICOLON      UNKNOW   */
+		/* START     */ { FSA_START,  FSA_LITERAL, FSA_WORD,    FSA_OPERATOR, FSA_COLON,  FSA_SEMICOLON, FSA_ERROR },
+		/* LITERAL   */ { FSA_ACCEPT, FSA_LITERAL, FSA_ERROR,   FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ERROR },
+		/* WORD      */ { FSA_ACCEPT, FSA_WORD,    FSA_WORD,    FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ERROR },
+		/* OPERATOR  */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ERROR },
+		/* COLON     */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ERROR },
+		/* SEMICOLON */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ERROR },
+		/* ERROR     */ { FSA_START,  FSA_ERROR,   FSA_ERROR,   FSA_ERROR,    FSA_ERROR,  FSA_ERROR,     FSA_ERROR }
 	};
 
 	return Transition_Table[(size_t)state][(size_t)class];
