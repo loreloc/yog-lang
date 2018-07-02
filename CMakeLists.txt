@@ -20,6 +20,7 @@ file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 # set yog source code files
 set(YOG_SRC ${YOG_SRC_DIR}/yog.c
+            ${YOG_SRC_DIR}/config.c
             ${YOG_SRC_DIR}/errors.c
             ${YOG_SRC_DIR}/symtable.c
             ${YOG_SRC_DIR}/scanner.c)

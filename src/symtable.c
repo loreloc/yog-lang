@@ -10,7 +10,7 @@ void rehash(struct symbol_table *st, size_t cnt);
 void symbol_table_init(struct symbol_table *st)
 {
 	st->buckets_cnt = ST_BUCKETS_MIN;
-	st->buckets = malloc(st->buckets_cnt * sizeof(struct symbol *));
+	st->buckets = ymalloc(st->buckets_cnt * sizeof(struct symbol *));
 
 	st->buckets[0] = NULL;
 	st->symbols_cnt = 0;
@@ -27,11 +27,11 @@ void symbol_table_clear(struct symbol_table *st)
 		{
 			tmp = st->buckets[i];
 			st->buckets[i] = tmp->next;
-			free(tmp);
+			yfree(tmp);
 		}
 	}
 
-	free(st->buckets);
+	yfree(st->buckets);
 	st->buckets = NULL;
 	st->buckets_cnt = 0;
 	st->symbols_cnt = 0;
@@ -58,7 +58,7 @@ struct symbol *symbol_table_find(struct symbol_table st, const char* id)
 struct symbol *symbol_table_add(struct symbol_table *st, const char* id)
 {
 	// allocate the new symbol node
-	struct symbol *new_symbol = malloc(sizeof(struct symbol));
+	struct symbol *new_symbol = ymalloc(sizeof(struct symbol));
 	new_symbol->type = SYMBOL_UNKNOW;
 	strcpy(new_symbol->id, id);
 
@@ -121,7 +121,7 @@ void rehash(struct symbol_table *st, size_t cnt)
 
 	// allocate the bucket array of the new symbol table
 	new_st.buckets_cnt = cnt;
-	new_st.buckets = malloc(new_st.buckets_cnt * sizeof(struct symbol *));
+	new_st.buckets = ymalloc(new_st.buckets_cnt * sizeof(struct symbol *));
 
 	// initialize the symbol lists of the buckets
 	for(size_t i = 0; i < new_st.buckets_cnt; ++i)
@@ -129,7 +129,7 @@ void rehash(struct symbol_table *st, size_t cnt)
 
 	new_st.symbols_cnt = 0;
 
-	// copy the symbols from the old symbol table to the new symbol table
+	// move the symbols from the old symbol table to the new symbol table
 	for(size_t i = 0; i < st->buckets_cnt; ++i)
 	{
 		struct symbol *tmp = st->buckets[i];

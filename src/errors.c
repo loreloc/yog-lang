@@ -14,14 +14,14 @@ void error_handler_clear(struct error_handler *err_hnd)
 	{
 		tmp = err_hnd->head;
 		err_hnd->head = tmp->next;
-		free(tmp);
+		yfree(tmp);
 	}
 }
 
 void error_handler_add(struct error_handler *err_hnd, struct location loc, enum error_type type, const char *msg)
 {
 	// allocate a new error node
-	struct error *new_error = malloc(sizeof(struct error));
+	struct error *new_error = ymalloc(sizeof(struct error));
 	new_error->next = NULL;
 	new_error->loc = loc;
 	new_error->type = type;

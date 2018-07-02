@@ -6,7 +6,7 @@ int main(int argc, char* argv[])
 	if(argc < 2)
 	{
 		printf("usage:\tyog <filename>\n"); // TODO: check for .yog file type
-		return -1;
+		return 1;
 	}
 
 	const char *filename = argv[1];
@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
 	if(!source)
 	{
 		printf("failed to open %s\n", filename);
-		return 1;
+		return 2;
 	}
 
 	// initialize the error handler

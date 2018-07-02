@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <stdio.h>
 #include "errors.h"
 #include "token.h"
 
