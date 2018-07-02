@@ -48,36 +48,25 @@ bool lex(struct token *tok, struct lex_context *ctx, struct symbol_table *st, st
 	char text[TEXT_SIZE] = { '\0' };
 	size_t text_len = 0;
 	struct location text_loc;
+
 	enum fsa_state state = FSA_START;
+	char character;
+
+	// get the next character
+	if(ctx->lookahead == '\0')
+	{
+		character = fgetc(ctx->source);
+		if(character == EOF)
+			return false;
+	}
+	else
+	{
+		character = ctx->lookahead;
+		ctx->lookahead = '\0';
+	}
 
 	while(true)
 	{
-		char character;
-
-		// get the next character
-		if(ctx->lookahead =='\0')
-		{
-			character = fgetc(ctx->source);
-		}
-		else
-		{
-			character = ctx->lookahead;
-			ctx->lookahead = '\0';
-		}
-
-		// check if source EOF has been reached
-		if(feof(ctx->source))
-		{
-			// check for text buffer overflow
-			if(text_len == TEXT_SIZE)
-			{
-				error_handler_add(err_hnd, text_loc, ERROR_LEXICAL, TEXT_OVERFLOW_MSG);
-				return false;
-			}
-
-			break;
-		}
-
 		// get the next automata state
 		enum fsa_state new_state = next_state(state, identify_char(character));
 
@@ -124,6 +113,22 @@ bool lex(struct token *tok, struct lex_context *ctx, struct symbol_table *st, st
 
 		// update the lexical context cursor location
 		update_cursor(&ctx->loc, character);
+
+		// get the next character
+		character = fgetc(ctx->source);
+
+		// check if source EOF has been reached
+		if(character == EOF)
+		{
+			// check for text buffer overflow
+			if(text_len == TEXT_SIZE)
+			{
+				error_handler_add(err_hnd, text_loc, ERROR_LEXICAL, TEXT_OVERFLOW_MSG);
+				return false;
+			}
+
+			break;
+		}
 	}
 
 	// construct the result token
