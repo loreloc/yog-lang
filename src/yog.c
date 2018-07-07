@@ -38,7 +38,6 @@ int main(int argc, char* argv[])
 	// print the error list
 	if(!error_list_empty(errs))
 	{
-		printf("\nerror list:\n");
 		error_list_show(errs);
 	}
 	else
