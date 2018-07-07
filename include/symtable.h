@@ -51,6 +51,12 @@ void symbol_table_init(struct symbol_table *st);
 void symbol_table_clear(struct symbol_table *st);
 
 /**
+ * @brief Print a symbol table
+ * @param st The symbol table to print
+ */
+void symbol_table_show(struct symbol_table st);
+
+/**
  * @brief Find a symbol by its name in a symbol table
  * @brief st The symbol table in which to find the symbol
  * @brief id The identifier of the symbol to find

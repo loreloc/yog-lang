@@ -14,6 +14,7 @@ enum fsa_state
 	FSA_COLON,
 	FSA_SEMICOLON,
 	FSA_ERROR,
+	FSA_EOF,
 	FSA_ACCEPT
 };
 
@@ -26,6 +27,7 @@ enum char_class
 	CHAR_OPERATOR,
 	CHAR_COLON,
 	CHAR_SEMICOLON,
+	CHAR_EOF,
 	CHAR_UNKNOW
 };
 
@@ -43,21 +45,18 @@ void lex_context_init(struct lex_context *ctx, FILE *source)
 	ctx->loc.col = 1;
 }
 
-bool lex(struct token *tok, struct lex_context *ctx, struct symbol_table *st, struct error_handler *err_hnd)
+struct token lex(struct lex_context *ctx, struct symbol_table *st, struct error_list *errs)
 {
 	char text[TEXT_SIZE] = { '\0' };
 	size_t text_len = 0;
 	struct location text_loc;
-
 	enum fsa_state state = FSA_START;
 	char character;
 
-	// get the next character
+	// get the first character
 	if(ctx->lookahead == '\0')
 	{
 		character = fgetc(ctx->source);
-		if(character == EOF)
-			return false;
 	}
 	else
 	{
@@ -70,13 +69,27 @@ bool lex(struct token *tok, struct lex_context *ctx, struct symbol_table *st, st
 		// get the next automata state
 		enum fsa_state new_state = next_state(state, identify_char(character));
 
-		// check if the new state is final
-		if(new_state == FSA_ACCEPT)
+		// handle the different state transitions
+		if(state == FSA_START)
 		{
-			// check for text buffer overflow
+			if(new_state == FSA_EOF)
+				break;
+
+			if(new_state != FSA_START)
+				text_loc = ctx->loc;
+		}
+		else if(state == FSA_ERROR && new_state != FSA_ERROR)
+		{
+			error_list_add_lexical(errs, text_loc, (text_len < TEXT_SIZE) ? text : TEXT_OVERFLOW_MSG);
+			memset(text, '\0', TEXT_SIZE);
+			text_len = 0;
+			new_state = FSA_START;
+		}
+		else if(new_state == FSA_ACCEPT)
+		{
 			if(text_len == TEXT_SIZE)
 			{
-				error_handler_add(err_hnd, text_loc, ERROR_LEXICAL, TEXT_OVERFLOW_MSG);
+				error_list_add_lexical(errs, text_loc, TEXT_OVERFLOW_MSG);
 				memset(text, '\0', TEXT_SIZE);
 				text_len = 0;
 				new_state = FSA_START;
@@ -85,23 +98,6 @@ bool lex(struct token *tok, struct lex_context *ctx, struct symbol_table *st, st
 			{
 				ctx->lookahead = character;
 				break;
-			}
-		}
-
-		// handle different state changes
-		if(state == FSA_START)
-		{
-			if(new_state != FSA_START)
-				text_loc = ctx->loc;
-		}
-		else if(state == FSA_ERROR)
-		{
-			if(new_state != FSA_ERROR)
-			{
-				const char *err_msg = (text_len < TEXT_SIZE) ? text : TEXT_OVERFLOW_MSG;
-				error_handler_add(err_hnd, text_loc, ERROR_LEXICAL, err_msg);
-				memset(text, '\0', TEXT_SIZE);
-				text_len = 0;
 			}
 		}
 
@@ -116,51 +112,38 @@ bool lex(struct token *tok, struct lex_context *ctx, struct symbol_table *st, st
 
 		// get the next character
 		character = fgetc(ctx->source);
-
-		// check if source EOF has been reached
-		if(character == EOF)
-		{
-			// check for text buffer overflow
-			if(text_len == TEXT_SIZE)
-			{
-				error_handler_add(err_hnd, text_loc, ERROR_LEXICAL, TEXT_OVERFLOW_MSG);
-				return false;
-			}
-
-			break;
-		}
 	}
 
 	// construct the result token
+	struct token result;
 	switch(state)
 	{
-		case FSA_START:
-			return false;
 		case FSA_LITERAL:
-			tok->type = TOKEN_LITERAL;
-			tok->lit  = atoi(text);
-			tok->loc = text_loc;
+			result.type = TOKEN_LITERAL;
+			result.lit = atoi(text);
+			result.loc = text_loc;
 			break;
 		case FSA_WORD:
-			*tok = make_token_word(text, st, text_loc);
+			result = make_token_word(text, st, text_loc);
 			break;
 		case FSA_OPERATOR:
-			*tok = make_token_operator(text, text_loc);
+			result = make_token_operator(text, text_loc);
 			break;
 		case FSA_COLON:
-			tok->type = TOKEN_COLON;
-			tok->loc = text_loc;
+			result.type = TOKEN_COLON;
+			result.loc = text_loc;
 			break;
 		case FSA_SEMICOLON:
-			tok->type = TOKEN_SEMICOLON;
-			tok->loc = text_loc;
+			result.type = TOKEN_SEMICOLON;
+			result.loc = text_loc;
 			break;
-		default: // case FSA_ERROR:
-			error_handler_add(err_hnd, text_loc, ERROR_LEXICAL, text);
-			return false;
+		default:
+			result.type = TOKEN_EOF;
+			result.loc = ctx->loc;
+			break;
 	}
 
-	return true;
+	return result;
 }
 
 void update_cursor(struct location *loc, char c)
@@ -191,22 +174,24 @@ enum char_class identify_char(char c)
 		return CHAR_COLON;
 	else if(c == ';')
 		return CHAR_SEMICOLON;
+	else if(c == EOF)
+		return CHAR_EOF;
 	else
 		return CHAR_UNKNOW;
 }
 
 enum fsa_state next_state(enum fsa_state state, enum char_class class)
 {
-	static const enum fsa_state Transition_Table[7][7] =
+	static const enum fsa_state Transition_Table[7][8] =
 	{
-		             /*   WHITESPACE  DIGIT        ALPHABETICAL OPERATOR      COLON       SEMICOLON      UNKNOW   */
-		/* START     */ { FSA_START,  FSA_LITERAL, FSA_WORD,    FSA_OPERATOR, FSA_COLON,  FSA_SEMICOLON, FSA_ERROR },
-		/* LITERAL   */ { FSA_ACCEPT, FSA_LITERAL, FSA_ERROR,   FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ERROR },
-		/* WORD      */ { FSA_ACCEPT, FSA_WORD,    FSA_WORD,    FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ERROR },
-		/* OPERATOR  */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ERROR },
-		/* COLON     */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ERROR },
-		/* SEMICOLON */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ERROR },
-		/* ERROR     */ { FSA_START,  FSA_ERROR,   FSA_ERROR,   FSA_ERROR,    FSA_ERROR,  FSA_ERROR,     FSA_ERROR }
+		             /*   WHITESPACE  DIGIT        ALPHABETICAL OPERATOR      COLON       SEMICOLON      EOF         UNKNOW   */
+		/* START     */ { FSA_START,  FSA_LITERAL, FSA_WORD,    FSA_OPERATOR, FSA_COLON,  FSA_SEMICOLON, FSA_EOF,    FSA_ERROR },
+		/* LITERAL   */ { FSA_ACCEPT, FSA_LITERAL, FSA_ERROR,   FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ERROR },
+		/* WORD      */ { FSA_ACCEPT, FSA_WORD,    FSA_WORD,    FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ERROR },
+		/* OPERATOR  */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ERROR },
+		/* COLON     */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ERROR },
+		/* SEMICOLON */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ERROR },
+		/* ERROR     */ { FSA_START,  FSA_ERROR,   FSA_ERROR,   FSA_ERROR,    FSA_ERROR,  FSA_ERROR,     FSA_ACCEPT, FSA_ERROR }
 	};
 
 	return Transition_Table[(size_t)state][(size_t)class];

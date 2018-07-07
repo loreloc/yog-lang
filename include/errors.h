@@ -3,38 +3,53 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <string.h>
-#include <stdbool.h>
-#include "config.h"
-#include "location.h"
+#include <stdarg.h>
+#include "token.h"
 
-/*! @brief The maximum size of the error message string */
-#define ERROR_MSG_SIZE ID_STR_SIZE
+/*! @brief The size of the expected tokens and found token strings */
+#define TOKEN_STR_SIZE 64
 
 /**
  * @brief All the possible error types
  */
 enum error_type
 {
-	ERROR_LEXICAL
+	ERROR_LEXICAL,
+	ERROR_SYNTACTIC,
 };
 
 /**
- * @brief Error informations
+ * @brief The node of an error list
  */
 struct error
 {
-	struct location loc;      /*!< @brief The location in the source code */
-	enum error_type type;     /*!< @brief The type of the error */
-	char msg[ERROR_MSG_SIZE]; /*!< @brief An helpful message */
-	struct error *next;       /*!< @brief The next error in the error list */
+	struct location loc;  /*!< @brief The location in the source code */
+	enum error_type type; /*!< @brief The type of the error */
+
+	union
+	{
+		struct
+		{
+			char text[ID_STR_SIZE]; /*!< @brief The text string */
+
+		} lexical;
+
+		struct
+		{
+			enum token_type atype;  /*!< @brief The actual token type */
+			enum token_type etypes; /*!< @brief The expected token types set */
+
+		} syntactic;
+
+	} info; /*!< @brief The informations about the error */
+
+	struct error *next; /*!< @brief The next error in the error list */
 };
 
 /**
- * @brief Error handler
+ * @brief The error list
  */
-struct error_handler
+struct error_list
 {
 	struct error *head; /*!< @brief The error list head */
 	struct error *tail; /*!< @brief The error list tail */
@@ -42,24 +57,37 @@ struct error_handler
 
 /**
  * @brief Initialize an error handler
- * @param err_hnd A pointer to the error handler to initialize
+ * @param errs A pointer to the error list to initialize
  */
-void error_handler_init(struct error_handler *err_hnd);
+void error_list_init(struct error_list *errs);
 
 /**
  * @brief Clear the resources holded by an error handler
- * @param err_hnd A pointer to the error handler to clear
+ * @param errs A pointer to the error list to clear
  */
-void error_handler_clear(struct error_handler *err_hnd);
+void error_list_clear(struct error_list *errs);
 
 /**
- * @brief Notify a new error to an error handler
- * @param err_hnd A pointer to the error handler
- * @param loc The error location in the source code
- * @param type The type of the error
- * @param msg The helpful message string
- * @return false if an error occured, true otherwise
+ * @brief Print an error list
+ * @param errs The error list to print
  */
-void error_handler_add(struct error_handler *err_hnd, struct location loc, enum error_type type, const char* msg);
+void error_list_show(struct error_list errs);
+
+/**
+ * @brief Add a new lexical error to an error list
+ * @param errs A pointer to an error list
+ * @param loc The error location in the source code
+ * @param text The string message that rappresents the lexical error
+ */
+void error_list_add_lexical(struct error_list *errs, struct location loc, const char *text);
+
+/**
+ * @brief Add a new syntattic error to an error list
+ * @param errs A pointer to an error list
+ * @param loc The error location in the source code
+ * @param atype The actual token type
+ * @param etypes The expected token types set
+ */
+void error_list_add_syntactic(struct error_list *errs, struct location loc, enum token_type atype, enum token_type etypes);
 
 

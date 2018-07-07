@@ -22,8 +22,12 @@ file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 set(YOG_SRC ${YOG_SRC_DIR}/yog.c
             ${YOG_SRC_DIR}/config.c
             ${YOG_SRC_DIR}/errors.c
+            ${YOG_SRC_DIR}/token.c
             ${YOG_SRC_DIR}/symtable.c
-            ${YOG_SRC_DIR}/scanner.c)
+            ${YOG_SRC_DIR}/exprtree.c
+            ${YOG_SRC_DIR}/instructions.c
+            ${YOG_SRC_DIR}/scanner.c
+            ${YOG_SRC_DIR}/parser.c)
 
 # set c compiler debug flags
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -std=c99 -Wall -Wextra -g")

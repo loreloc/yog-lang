@@ -37,6 +37,34 @@ void symbol_table_clear(struct symbol_table *st)
 	st->symbols_cnt = 0;
 }
 
+void symbol_table_show(struct symbol_table st)
+{
+	for(size_t i = 0; i < st.buckets_cnt; ++i)
+	{
+		printf("(%lu) ", i);
+
+		const struct symbol *tmp = st.buckets[i];
+		while(tmp != NULL)
+		{
+			printf("%s", tmp->id);
+
+			switch(tmp->type)
+			{
+				case SYMBOL_UNKNOW:
+					printf(" - <unknow> | ");
+					break;
+				default: // case SYMBOL_INTEGER:
+					printf(" - <integer> | ");
+					break;
+			}
+
+			tmp = tmp->next;
+		}
+
+		printf("\n");
+	}
+}
+
 struct symbol *symbol_table_find(struct symbol_table st, const char* id)
 {
 	// calculate the bucket index
