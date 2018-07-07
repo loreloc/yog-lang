@@ -24,6 +24,7 @@ struct symbol
 {
 	enum symbol_type type; /*!< @brief The type of the symbol */
 	char id[ID_STR_SIZE];  /*!< @brief The identifier of the symbol */
+	int64_t value;         /*!< @brief The value of the symbol */
 	struct symbol *next;   /*!< @brief The next symbol in the bucket */
 };
 

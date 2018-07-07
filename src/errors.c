@@ -21,6 +21,11 @@ void error_list_clear(struct error_list *errs)
 	}
 }
 
+bool error_list_empty(struct error_list errs)
+{
+	return errs.head == NULL;
+}
+
 void error_list_show(struct error_list errs)
 {
 	size_t index = 1;
@@ -48,49 +53,43 @@ void error_list_show(struct error_list errs)
 	}
 }
 
-void error_list_add_lexical(struct error_list *errs, struct location loc, const char *text)
+void error_list_add(struct error_list *errs, struct error *new_err)
 {
-	// allocate a new error node
-	struct error *new_error = ymalloc(sizeof(struct error));
-	new_error->next = NULL;
-	new_error->loc = loc;
-	new_error->type = ERROR_LEXICAL;
-	snprintf(new_error->info.lexical.text, ID_STR_SIZE, "%s", text);
-
-	// add the new error node to the error list
-	if(errs->head)
+	if(error_list_empty(*errs))
 	{
-		errs->tail->next = new_error;
-		errs->tail = new_error;
+		errs->head = new_err;
+		errs->tail = new_err;
 	}
 	else
 	{
-		errs->head = new_error;
-		errs->tail = new_error;
+		errs->tail->next = new_err;
+		errs->tail = new_err;
 	}
+}
+
+void error_list_add_lexical(struct error_list *errs, struct location loc, const char *text)
+{
+	// allocate a new error node
+	struct error *new_err = ymalloc(sizeof(struct error));
+	new_err->next = NULL;
+	new_err->loc = loc;
+	new_err->type = ERROR_LEXICAL;
+	snprintf(new_err->info.lexical.text, ID_STR_SIZE, "%s", text);
+
+	error_list_add(errs, new_err);
 }
 
 void error_list_add_syntactic(struct error_list *errs, struct location loc, enum token_type atype, enum token_type etypes)
 {
 	// allocate a new error node
-	struct error *new_error = ymalloc(sizeof(struct error));
-	new_error->next = NULL;
-	new_error->loc = loc;
-	new_error->type = ERROR_SYNTACTIC;
-	new_error->info.syntactic.atype = atype;
-	new_error->info.syntactic.etypes = etypes;
+	struct error *new_err = ymalloc(sizeof(struct error));
+	new_err->next = NULL;
+	new_err->loc = loc;
+	new_err->type = ERROR_SYNTACTIC;
+	new_err->info.syntactic.atype = atype;
+	new_err->info.syntactic.etypes = etypes;
 
-	// add the new error node to the error list
-	if(errs->head)
-	{
-		errs->tail->next = new_error;
-		errs->tail = new_error;
-	}
-	else
-	{
-		errs->head = new_error;
-		errs->tail = new_error;
-	}
+	error_list_add(errs, new_err);
 }
 
 void print_token_type_set(enum token_type set)

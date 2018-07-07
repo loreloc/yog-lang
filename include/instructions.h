@@ -21,15 +21,10 @@ enum instr_type
  */
 struct instr
 {
-	enum instr_type type; /*!< @brief The type of the instruction */
-
-	union
-	{
-		struct symbol *sym;     /*!< @brief The symbol field */
-		struct expr_tree *tree; /*!< @brief The expression tree field */
-	};
-
-	struct instr *next; /*!< @brief The next instruction */
+	enum instr_type type;   /*!< @brief The type of the instruction */
+	struct symbol *sym;     /*!< @brief The symbol of the destination variable */
+	struct expr_tree *tree; /*!< @brief The expression tree to evaluate */
+	struct instr *next;     /*!< @brief The next instruction */
 };
 
 /**
@@ -52,6 +47,20 @@ void instr_list_init(struct instr_list *instrs);
  * @param instrs A pointer to the instruction list to clear
  */
 void instr_list_clear(struct instr_list *instrs);
+
+/**
+ * @brief Check if an error list is empty
+ * @param instrs The error list to check
+ * @return true if the error list is empty, false otherwise
+ */
+bool instr_list_empty(struct instr_list instrs);
+
+/**
+ * @brief Add a new instruction node to an instruction list
+ * @param instrs A pointer to the instruction list
+ * @param new_instr A pointer to the new instruction
+ */
+void instr_list_add(struct instr_list *instrs, struct instr *new_instr);
 
 /**
  * @brief Add a new assignment instruction to an instruction list

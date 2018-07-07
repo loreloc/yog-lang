@@ -98,10 +98,10 @@ void parse_variables(struct parse_context *ctx)
 
 void parse_statements(struct parse_context *ctx)
 {
-	struct symbol *sym = ctx->tok.sym;
-
 	while(true)
 	{
+		struct symbol *sym = ctx->tok.sym;
+
 		if(accept_token(ctx, TOKEN_IDENTIFIER))
 		{
 			if(expect_token(ctx, TOKEN_EQUAL))

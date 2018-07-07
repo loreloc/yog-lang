@@ -27,7 +27,8 @@ set(YOG_SRC ${YOG_SRC_DIR}/yog.c
             ${YOG_SRC_DIR}/exprtree.c
             ${YOG_SRC_DIR}/instructions.c
             ${YOG_SRC_DIR}/scanner.c
-            ${YOG_SRC_DIR}/parser.c)
+            ${YOG_SRC_DIR}/parser.c
+            ${YOG_SRC_DIR}/interpreter.c)
 
 # set c compiler debug flags
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -std=c99 -Wall -Wextra -g")

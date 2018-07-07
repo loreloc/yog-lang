@@ -1,5 +1,6 @@
 
 #include "parser.h"
+#include "interpreter.h"
 
 int main(int argc, char* argv[])
 {
@@ -34,13 +35,21 @@ int main(int argc, char* argv[])
 	// parse the source code
 	parse(&ctx);
 
-	// print the symbol table
-	printf("\nsymbol table:\n");
-	symbol_table_show(st);
-
 	// print the error list
-	printf("\nerror list:\n");
-	error_list_show(errs);
+	if(!error_list_empty(errs))
+	{
+		printf("\nerror list:\n");
+		error_list_show(errs);
+	}
+	else
+	{
+		// initialize the interpreter
+		struct interpreter vm;
+		interpreter_init(&vm, ctx.instrs);
+
+		// execute the interpreter
+		interpreter_execute(&vm);
+	}
 
 	// cleanup
 	instr_list_clear(&ctx.instrs);

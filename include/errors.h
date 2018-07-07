@@ -68,10 +68,24 @@ void error_list_init(struct error_list *errs);
 void error_list_clear(struct error_list *errs);
 
 /**
+ * @brief Check if an error list is empty
+ * @param errs The error list to check
+ * @return true if the error list is empty, false otherwise
+ */
+bool error_list_empty(struct error_list errs);
+
+/**
  * @brief Print an error list
  * @param errs The error list to print
  */
 void error_list_show(struct error_list errs);
+
+/**
+ * @brief Add a new error node to an error list
+ * @param errs A pointer to an error list
+ * @param new_err A pointer to the new error
+ */
+void error_list_add(struct error_list *errs, struct error *new_err);
 
 /**
  * @brief Add a new lexical error to an error list
