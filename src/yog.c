@@ -6,7 +6,7 @@ int main(int argc, char* argv[])
 {
 	if(argc < 2)
 	{
-		printf("usage:\tyog <filename>\n"); // TODO: check for .yog file type
+		printf("usage:\tyog <filename>\n");
 		return 1;
 	}
 
@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
 	// parse the source code
 	parse(&ctx);
 
-	// print the error list
+	// check the error list
 	if(!error_list_empty(errs))
 	{
 		error_list_show(errs);

@@ -9,35 +9,40 @@
 #include "defines.h"
 #include "common.h"
 
-/**
- * @brief The possible types of a symbol
- */
+/*! @brief The types of a symbol node */
 enum symbol_type
 {
 	SYMBOL_UNKNOW,
 	SYMBOL_INTEGER
 };
 
-/**
- * @brief The symbol data structure
- */
+/*! @brief The symbol node */
 struct symbol
 {
-	enum symbol_type type; /*!< @brief The type of the symbol */
-	char id[ID_STR_SIZE];  /*!< @brief The identifier of the symbol */
-	int64_t value;         /*!< @brief The value of the symbol */
-	struct symbol *next;   /*!< @brief The next symbol in the bucket */
+	/*! @brief The type of the symbol node */
+	enum symbol_type type;
+
+	/*! @brief The identifier string of the symbol */
+	char id[ID_STR_SIZE];
+
+	/*! @brief The integral value of the symbol */
+	int64_t value;
+
+	/*! @brief The next symbol in the symbol table bucket */
+	struct symbol *next;
 };
 
-/**
- * @brief The symbol table data structure
- * The symbol table is implemented as an hash table
- */
+/*! @brief The symbol table data structure (hash table) */
 struct symbol_table
 {
-	size_t buckets_cnt;      /*!< @brief The number of buckets of the hash table structure */
-	struct symbol **buckets; /*!< @brief The symbol lists buckets */
-	size_t symbols_cnt;      /*!< @brief The number of symbols in the symbol table */
+	/*! @brief The number of buckets of the hash table */
+	size_t buckets_cnt;
+
+	/*! @brief The buckets of symbol lists */
+	struct symbol **buckets;
+
+	/*! @brief The number of symbols in the symbol table */
+	size_t symbols_cnt;
 };
 
 /**
@@ -62,7 +67,7 @@ void symbol_table_show(struct symbol_table st);
  * @brief Find a symbol by its name in a symbol table
  * @brief st The symbol table in which to find the symbol
  * @brief id The identifier of the symbol to find
- * @return A pointer to the symbol if it's found, NULL otherwise
+ * @return A pointer to the symbol if it is found, NULL otherwise
  */
 struct symbol *symbol_table_find(struct symbol_table st, const char* id);
 
@@ -70,7 +75,7 @@ struct symbol *symbol_table_find(struct symbol_table st, const char* id);
  * @brief Add a new symbol in a symbol table
  * @brief st A pointer to the symbol table to modify
  * @brief id The identifier of the symbol to add
- * @return A pointer to the new symbol
+ * @return A pointer to the new symbol added
  */
 struct symbol *symbol_table_add(struct symbol_table *st, const char* name);
 

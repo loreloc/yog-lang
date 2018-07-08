@@ -5,60 +5,65 @@
 
 #include "token.h"
 
-/**
- * @brief All the possible error types
- */
+/*! @brief The types of an error node */
 enum error_type
 {
 	ERROR_LEXICAL,
 	ERROR_SYNTACTIC,
 };
 
-/**
- * @brief The node of an error list
- */
+/*! @brief The node of the error list */
 struct error
 {
-	struct location loc;  /*!< @brief The location in the source code */
-	enum error_type type; /*!< @brief The type of the error */
+	/*! @brief The location in the source code */
+	struct location loc;
+
+	/*! @brief The type of the error */
+	enum error_type type;
 
 	union
 	{
 		struct
 		{
-			char text[ID_STR_SIZE]; /*!< @brief The text string */
+			/*! @brief The text string */
+			char text[ID_STR_SIZE];
 
 		} lexical;
 
 		struct
 		{
-			enum token_type atype;  /*!< @brief The actual token type */
-			enum token_type etypes; /*!< @brief The expected token types set */
+			/*! @brief The actual token type found */
+			enum token_type act_type;
+
+			/*! @brief The expected token types bit set */
+			enum token_type exp_types;
 
 		} syntactic;
 
 	} info; /*!< @brief The informations about the error */
 
-	struct error *next; /*!< @brief The next error in the error list */
+	/*! @brief The next error in the error list */
+	struct error *next; 
 };
 
-/**
- * @brief The error list
- */
+/*! @brief The error list data structure */
 struct error_list
 {
-	struct error *head; /*!< @brief The error list head */
-	struct error *tail; /*!< @brief The error list tail */
+	/*! @brief The head pointer of the list */
+	struct error *head;
+
+	/*! @brief The tail pointer of the list */
+	struct error *tail;
 };
 
 /**
- * @brief Initialize an error handler
+ * @brief Initialize an error list
  * @param errs A pointer to the error list to initialize
  */
 void error_list_init(struct error_list *errs);
 
 /**
- * @brief Clear the resources holded by an error handler
+ * @brief Clear an error list
  * @param errs A pointer to the error list to clear
  */
 void error_list_clear(struct error_list *errs);
@@ -79,9 +84,9 @@ void error_list_show(struct error_list errs);
 /**
  * @brief Add a new error node to an error list
  * @param errs A pointer to an error list
- * @param new_err A pointer to the new error
+ * @param new_node A pointer to the new error node
  */
-void error_list_add(struct error_list *errs, struct error *new_err);
+void error_list_add(struct error_list *errs, struct error *new_node);
 
 /**
  * @brief Add a new lexical error to an error list
@@ -92,12 +97,12 @@ void error_list_add(struct error_list *errs, struct error *new_err);
 void error_list_add_lexical(struct error_list *errs, struct location loc, const char *text);
 
 /**
- * @brief Add a new syntattic error to an error list
+ * @brief Add a new syntactic error to an error list
  * @param errs A pointer to an error list
  * @param loc The error location in the source code
- * @param atype The actual token type
- * @param etypes The expected token types set
+ * @param act_type The actual token type found
+ * @param exp_types The expected token types bit set
  */
-void error_list_add_syntactic(struct error_list *errs, struct location loc, enum token_type atype, enum token_type etypes);
+void error_list_add_syntactic(struct error_list *errs, struct location loc, enum token_type act_type, enum token_type exp_types);
 
 

@@ -5,19 +5,15 @@
 
 #include "symtable.h"
 
-/**
- * @brief The possible expression tree node types
- */
+/*! @brief The types of an expression node */
 enum expr_node_type
 {
-	NODE_OPERATOR,
-	NODE_LITERAL,
-	NODE_VARIABLE
+	EXPR_NODE_OPERATOR,
+	EXPR_NODE_LITERAL,
+	EXPR_NODE_VARIABLE
 };
 
-/**
- * @brief The supported operators
- */
+/*! @brief The supported operators */
 enum operator
 {
 	OP_PLUS,
@@ -26,40 +22,47 @@ enum operator
 	OP_DIV
 };
 
-/**
- * @brief The expression tree data structure
- */
+/*! @brief The expression tree data structure */
 struct expr_tree
 {
-	enum expr_node_type type; /*!< @brief The type of the node */
+	/*! @brief The type of the node */
+	enum expr_node_type type;
 
 	union
 	{
-		enum operator op;   /*!< @brief The operator field */
-		int64_t lit;        /*!< @brief The literal field */
-		struct symbol *sym; /*!< @brief The symbol pointer field */
+		/*! @brief The operator value */
+		enum operator op;
+
+		/*! @brief The literal value */
+		int64_t lit;
+
+		/*! @brief The symbol pointer value */
+		struct symbol *sym;
 
 	} value; /*!< @brief The value of the expression tree node */
 
-	struct expr_tree *left;  /*!< @brief The left sub-tree */
-	struct expr_tree *right; /*!< @brief The right sub-tree */
+	/*! @brief The left sub-tree */
+	struct expr_tree *left;
+
+	/*! @brief The right sub-tree */
+	struct expr_tree *right;
 };
 
 /**
- * @brief Allocate a new expression tree with operator node
+ * @brief Allocate a new expression tree with a operator node
  * @param op The operator value
  */
 struct expr_tree *expr_tree_make_op(enum operator op);
 
 /**
- * @brief Allocate a new expression tree with literal node
+ * @brief Allocate a new expression tree with a literal node
  * @param lit The literal value
  */
 struct expr_tree *expr_tree_make_lit(int64_t lit);
 
 /**
- * @brief Allocate a new expression tree with symbol pointer node
- * @param sym The symbol pointer
+ * @brief Allocate a new expression tree with a symbol pointer node
+ * @param sym The symbol pointer value
  */
 struct expr_tree *expr_tree_make_sym(struct symbol *sym);
 
@@ -70,7 +73,7 @@ struct expr_tree *expr_tree_make_sym(struct symbol *sym);
 void expr_tree_clear(struct expr_tree *tree);
 
 /**
- * @brief Evalueate an expression tree
+ * @brief Evaluate an expression tree
  * @param tree A pointer to the expression tree to evaluate
  * @return The value of the expression
  */

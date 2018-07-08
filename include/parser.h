@@ -6,16 +6,23 @@
 #include "scanner.h"
 #include "instructions.h"
 
-/**
- * @brief The parse context
- */
+/*! @brief The parse context data structure */
 struct parse_context
 {
-	struct lex_context lex_ctx; /*!< @brief The lexical context */
-	struct symbol_table *st;    /*!< @brief A pointer to the symbol table */
-	struct error_list *errs;    /*!< @brief A pointer to the error list */
-	struct instr_list instrs;   /*!< @brief The instructions list */
-	struct token tok;           /*!< @brief The current extracted token */
+	/*! @brief The lexical context */
+	struct lex_context lex_ctx;
+
+	/*! @brief A pointer to the symbol table */
+	struct symbol_table *st;
+
+	/*! @brief A pointer to the error list */
+	struct error_list *errs;
+
+	/*! @brief The instructions list */
+	struct instr_list instrs;
+	
+	/*! @brief The current extracted token */
+	struct token tok;
 };
 
 /**

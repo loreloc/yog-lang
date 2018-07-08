@@ -107,10 +107,8 @@ struct token lex(struct lex_context *ctx, struct symbol_table *st, struct error_
 		if(state != FSA_START && text_len < TEXT_SIZE)
 			text[text_len++] = character;
 
-		// update the lexical context cursor location
 		update_cursor(&ctx->loc, character);
 
-		// get the next character
 		character = fgetc(ctx->source);
 	}
 
@@ -120,7 +118,7 @@ struct token lex(struct lex_context *ctx, struct symbol_table *st, struct error_
 	{
 		case FSA_LITERAL:
 			result.type = TOKEN_LITERAL;
-			result.lit = atoi(text);
+			result.value.lit = atoi(text);
 			result.loc = text_loc;
 			break;
 		case FSA_WORD:
@@ -221,13 +219,12 @@ struct token make_token_word(char *text, struct symbol_table *st, struct locatio
 		struct symbol *sym = symbol_table_find(*st, text);
 
 		// if the symbol isn't found add it to the symbol table
-		if(!sym)
+		if(sym == NULL)
 			sym = symbol_table_add(st, text);
 
-		tok.sym = sym;
+		tok.value.sym = sym;
 	}
 
-	// initialize the token location
 	tok.loc = loc;
 
 	return tok;
@@ -256,7 +253,6 @@ struct token make_token_operator(char *text, struct location loc)
 			break;
 	}
 
-	// initialize the token location
 	tok.loc = loc;
 
 	return tok;

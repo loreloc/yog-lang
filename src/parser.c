@@ -76,7 +76,7 @@ void parse_source(struct parse_context *ctx)
 
 void parse_variables(struct parse_context *ctx)
 {
-	struct symbol *sym = ctx->tok.sym;
+	struct symbol *sym = ctx->tok.value.sym;
 
 	while(accept_token(ctx, TOKEN_IDENTIFIER))
 	{
@@ -89,10 +89,10 @@ void parse_variables(struct parse_context *ctx)
 		if(valid)
 		{
 			sym->type = SYMBOL_INTEGER;
-			sym = ctx->tok.sym;
+			sym = ctx->tok.value.sym;
 		}
 
-		sym = ctx->tok.sym;
+		sym = ctx->tok.value.sym;
 	}
 }
 
@@ -100,7 +100,7 @@ void parse_statements(struct parse_context *ctx)
 {
 	while(true)
 	{
-		struct symbol *sym = ctx->tok.sym;
+		struct symbol *sym = ctx->tok.value.sym;
 
 		if(accept_token(ctx, TOKEN_IDENTIFIER))
 		{
@@ -109,7 +109,7 @@ void parse_statements(struct parse_context *ctx)
 		}
 		else if(accept_token(ctx, TOKEN_READ))
 		{
-			sym = ctx->tok.sym;
+			sym = ctx->tok.value.sym;
 			
 			if(expect_token(ctx, TOKEN_IDENTIFIER))
 				instr_list_add_input(&ctx->instrs, sym);
@@ -185,11 +185,11 @@ struct expr_tree *parse_factor(struct parse_context *ctx)
 
 	if(accept_token(ctx, TOKEN_LITERAL))
 	{
-		tree = expr_tree_make_lit(tok.lit);
+		tree = expr_tree_make_lit(tok.value.lit);
 	}
 	else if(accept_token(ctx, TOKEN_IDENTIFIER))
 	{
-		tree = expr_tree_make_sym(tok.sym);
+		tree = expr_tree_make_sym(tok.value.sym);
 	}
 	else
 	{

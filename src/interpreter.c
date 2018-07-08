@@ -15,7 +15,7 @@ void interpreter_execute(struct interpreter *vm)
 		// execute the instruction pointed by the instruction pointer
 		switch(ir.type)
 		{
-			case INSTR_ASSIGNMENT:
+			case INSTR_ASSIGN:
 				ir.sym->value = expr_tree_eval(ir.tree);
 				break;
 			case INSTR_INPUT:

@@ -5,12 +5,11 @@
 
 #include "instructions.h"
 
-/**
- * @brief The interpreter structure
- */
+/*! @brief The interpreter data structure */
 struct interpreter
 {
-	struct instr *ip; /*!< @brief The instruction pointer */
+	/*! @brief The instruction pointer */
+	struct instr *ip;
 };
 
 /**

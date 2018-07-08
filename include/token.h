@@ -6,9 +6,7 @@
 #include "location.h"
 #include "symtable.h"
 
-/**
- * @brief The possible types of a token
- */
+/*! @brief The types of a token */
 enum token_type
 {
 	TOKEN_EOF        = (1 <<  0),
@@ -29,22 +27,27 @@ enum token_type
 	TOKEN_EQUAL      = (1 << 15)
 };
 
-/*! @brief The maximum toke type value */
+/*! @brief The maximum token type value */
 #define TOKEN_TYPE_MAX (int)(TOKEN_EQUAL)
 
-/**
- * @brief The token data structure
- */
+/*! @brief The token data structure */
 struct token
 {
-	struct location loc;  /*!< @brief The location of the token in the source code */
-	enum token_type type; /*!< @brief The type of the token */
+	/*! @brief The location of the token in the source code */
+	struct location loc;
+	
+	/*! @brief The type of the token */
+	enum token_type type;
 
 	union
 	{
-		int64_t lit;        /*!< @brief The literal field */
-		struct symbol *sym; /*!< @brief The symbol pointer field */
-	};
+		/*! @brief The literal value */
+		int64_t lit;
+
+		/*! @brief A pointer to a symbol value */
+		struct symbol *sym;
+
+	} value; /*!< @brief The value of the token */
 };
 
 /**

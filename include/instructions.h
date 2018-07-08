@@ -6,34 +6,38 @@
 #include "symtable.h"
 #include "exprtree.h"
 
-/**
- * @brief The possible types of an instruction
- */
+/*! @brief The types of an instruction node */
 enum instr_type
 {
-	INSTR_ASSIGNMENT,
+	INSTR_ASSIGN,
 	INSTR_INPUT,
 	INSTR_OUTPUT
 };
 
-/**
- * @brief The node of an instruction list
- */
+/*! @brief The node of the instruction list */
 struct instr
 {
-	enum instr_type type;   /*!< @brief The type of the instruction */
-	struct symbol *sym;     /*!< @brief The symbol of the destination variable */
-	struct expr_tree *tree; /*!< @brief The expression tree to evaluate */
-	struct instr *next;     /*!< @brief The next instruction */
+	/*! @brief The type of the instruction node */
+	enum instr_type type;
+
+	/*! @brief A pointer to the symbol of the destination variable */
+	struct symbol *sym;
+
+	/*! @brief The expression tree to evaluate */
+	struct expr_tree *tree;
+
+	/*! @brief The next instruction node */
+	struct instr *next;
 };
 
-/**
- * @brief The instruction list
- */
+/*! @brief The instruction list data structure */
 struct instr_list
 {
-	struct instr *head; /*!< @brief The head of the instruction list */
-	struct instr *tail; /*!< @brief The tail of the instruction list */
+	/*! @brief The head of the instruction list */
+	struct instr *head;
+
+	/*! @brief The tail of the instruction list */
+	struct instr *tail;
 };
 
 /**
@@ -58,9 +62,9 @@ bool instr_list_empty(struct instr_list instrs);
 /**
  * @brief Add a new instruction node to an instruction list
  * @param instrs A pointer to the instruction list
- * @param new_instr A pointer to the new instruction
+ * @param new_node A pointer to the new instruction node
  */
-void instr_list_add(struct instr_list *instrs, struct instr *new_instr);
+void instr_list_add(struct instr_list *instrs, struct instr *new_node);
 
 /**
  * @brief Add a new assignment instruction to an instruction list
@@ -80,7 +84,7 @@ void instr_list_add_input(struct instr_list *instrs, struct symbol *sym);
 /**
  * @brief Add a new output instruction to an instruction list
  * @param instrs A pointer to the instructions list
- * @param tree A pointer to the expression tree to write
+ * @param tree A pointer to the expression tree to evaluate and write the result
  */
 void instr_list_add_output(struct instr_list *instrs, struct expr_tree *tree);
 
