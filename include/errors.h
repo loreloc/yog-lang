@@ -3,11 +3,7 @@
 
 #pragma once
 
-#include <stdarg.h>
 #include "token.h"
-
-/*! @brief The size of the expected tokens and found token strings */
-#define TOKEN_STR_SIZE 64
 
 /**
  * @brief All the possible error types

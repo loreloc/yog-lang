@@ -6,7 +6,8 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
-#include "config.h"
+#include "defines.h"
+#include "common.h"
 
 /**
  * @brief The possible types of a symbol

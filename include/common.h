@@ -1,13 +1,10 @@
 
-/*! @file config.h */
+/*! @file common.h */
 
 #pragma once
 
 #include <stdio.h>
 #include <stdlib.h>
-
-/*! @brief The identifier string size */
-#define ID_STR_SIZE 32
 
 /**
  * @brief Custom succeed-or-die memory allocation function

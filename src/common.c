@@ -1,5 +1,5 @@
 
-#include "config.h"
+#include "common.h"
 
 void *ymalloc(size_t bytes)
 {
