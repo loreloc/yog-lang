@@ -191,6 +191,12 @@ struct expr_tree *parse_factor(struct parse_context *ctx)
 	{
 		tree = expr_tree_make_sym(tok.value.sym);
 	}
+	else if(accept_token(ctx, TOKEN_LPAREN))
+	{
+		tree = parse_expression(ctx);
+
+		expect_token(ctx, TOKEN_RPAREN);
+	}
 	else
 	{
 		error_list_add_syntactic(ctx->errs, ctx->tok.loc, ctx->tok.type, TOKEN_LITERAL | TOKEN_IDENTIFIER);

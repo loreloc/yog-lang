@@ -35,8 +35,12 @@ const char *token_type_str(enum token_type type)
 			return "*";
 		case TOKEN_DIV:
 			return "/";
-		default: // case TOKEN_EQUAL:
+		case TOKEN_EQUAL:
 			return "=";
+		case TOKEN_LPAREN:
+			return "(";
+		default: // case TOKEN_RPAREN:
+			return ")";
 	}
 }
 

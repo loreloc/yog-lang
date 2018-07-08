@@ -13,6 +13,7 @@ enum fsa_state
 	FSA_OPERATOR,
 	FSA_COLON,
 	FSA_SEMICOLON,
+	FSA_PAREN,
 	FSA_ERROR,
 	FSA_EOF,
 	FSA_ACCEPT
@@ -27,6 +28,7 @@ enum char_class
 	CHAR_OPERATOR,
 	CHAR_COLON,
 	CHAR_SEMICOLON,
+	CHAR_PAREN,
 	CHAR_EOF,
 	CHAR_UNKNOW
 };
@@ -36,6 +38,7 @@ enum char_class identify_char(char c);
 enum fsa_state next_state(enum fsa_state state, enum char_class class);
 struct token make_token_word(char *text, struct symbol_table *st, struct location loc);
 struct token make_token_operator(char *text, struct location loc);
+struct token make_token_paren(char *text, struct location loc);
 
 void lex_context_init(struct lex_context *ctx, FILE *source)
 {
@@ -135,6 +138,9 @@ struct token lex(struct lex_context *ctx, struct symbol_table *st, struct error_
 			result.type = TOKEN_SEMICOLON;
 			result.loc = text_loc;
 			break;
+		case FSA_PAREN:
+			result = make_token_paren(text, text_loc);
+			break;
 		default:
 			result.type = TOKEN_EOF;
 			result.loc = ctx->loc;
@@ -172,6 +178,8 @@ enum char_class identify_char(char c)
 		return CHAR_COLON;
 	else if(c == ';')
 		return CHAR_SEMICOLON;
+	else if(c == '(' || c == ')')
+		return CHAR_PAREN;
 	else if(c == EOF)
 		return CHAR_EOF;
 	else
@@ -180,16 +188,17 @@ enum char_class identify_char(char c)
 
 enum fsa_state next_state(enum fsa_state state, enum char_class class)
 {
-	static const enum fsa_state Transition_Table[7][8] =
+	static const enum fsa_state Transition_Table[8][9] =
 	{
-		             /*   WHITESPACE  DIGIT        ALPHABETICAL OPERATOR      COLON       SEMICOLON      EOF         UNKNOW   */
-		/* START     */ { FSA_START,  FSA_LITERAL, FSA_WORD,    FSA_OPERATOR, FSA_COLON,  FSA_SEMICOLON, FSA_EOF,    FSA_ERROR },
-		/* LITERAL   */ { FSA_ACCEPT, FSA_LITERAL, FSA_ERROR,   FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ERROR },
-		/* WORD      */ { FSA_ACCEPT, FSA_WORD,    FSA_WORD,    FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ERROR },
-		/* OPERATOR  */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ERROR },
-		/* COLON     */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ERROR },
-		/* SEMICOLON */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ERROR },
-		/* ERROR     */ { FSA_START,  FSA_ERROR,   FSA_ERROR,   FSA_ERROR,    FSA_ERROR,  FSA_ERROR,     FSA_ACCEPT, FSA_ERROR }
+		             /*   WHITESPACE  DIGIT        ALPHABETICAL OPERATOR      COLON       SEMICOLON      PAREN       EOF         UNKNOW   */
+		/* START     */ { FSA_START,  FSA_LITERAL, FSA_WORD,    FSA_OPERATOR, FSA_COLON,  FSA_SEMICOLON, FSA_PAREN,  FSA_EOF,    FSA_ERROR },
+		/* LITERAL   */ { FSA_ACCEPT, FSA_LITERAL, FSA_ERROR,   FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT, FSA_ERROR },
+		/* WORD      */ { FSA_ACCEPT, FSA_WORD,    FSA_WORD,    FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT, FSA_ERROR },
+		/* OPERATOR  */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT, FSA_ERROR },
+		/* COLON     */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT, FSA_ERROR },
+		/* SEMICOLON */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT, FSA_ERROR },
+		/* PAREN     */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT, FSA_ERROR },
+		/* ERROR     */ { FSA_START,  FSA_ERROR,   FSA_ERROR,   FSA_ERROR,    FSA_ERROR,  FSA_ERROR,     FSA_ERROR,  FSA_ACCEPT, FSA_ERROR }
 	};
 
 	return Transition_Table[(size_t)state][(size_t)class];
@@ -250,6 +259,25 @@ struct token make_token_operator(char *text, struct location loc)
 			break;
 		default: // case '=':
 			tok.type = TOKEN_EQUAL;
+			break;
+	}
+
+	tok.loc = loc;
+
+	return tok;
+}
+
+struct token make_token_paren(char *text, struct location loc)
+{
+	struct token tok;
+
+	switch(text[0])
+	{
+		case '(':
+			tok.type = TOKEN_LPAREN;
+			break;
+		default: // case ')':
+			tok.type = TOKEN_RPAREN;
 			break;
 	}
 

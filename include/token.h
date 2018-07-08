@@ -24,7 +24,9 @@ enum token_type
 	TOKEN_MINUS      = (1 << 12),
 	TOKEN_MUL        = (1 << 13),
 	TOKEN_DIV        = (1 << 14),
-	TOKEN_EQUAL      = (1 << 15)
+	TOKEN_EQUAL      = (1 << 15),
+	TOKEN_LPAREN     = (1 << 16),
+	TOKEN_RPAREN     = (1 << 17)
 };
 
 /*! @brief The maximum token type value */
