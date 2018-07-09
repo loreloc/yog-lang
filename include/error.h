@@ -1,5 +1,5 @@
 
-/*! @file errors.h */
+/*! @file error.h */
 
 #pragma once
 

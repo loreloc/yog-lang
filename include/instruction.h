@@ -1,5 +1,5 @@
 
-/*! @file instructions.h */
+/*! @file instruction.h */
 
 #pragma once
 
