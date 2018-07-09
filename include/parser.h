@@ -4,7 +4,7 @@
 #pragma once
 
 #include "scanner.h"
-#include "instructions.h"
+#include "instruction.h"
 
 /*! @brief The parse context data structure */
 struct parse_context

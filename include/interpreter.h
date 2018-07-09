@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "instructions.h"
+#include "instruction.h"
 
 /*! @brief The interpreter data structure */
 struct interpreter

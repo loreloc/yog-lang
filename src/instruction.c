@@ -1,5 +1,5 @@
 
-#include "instructions.h"
+#include "instruction.h"
 
 void instr_list_init(struct instr_list *instrs)
 {

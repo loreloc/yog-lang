@@ -1,5 +1,5 @@
 
-#include "errors.h"
+#include "error.h"
 
 void print_token_type_set(enum token_type set);
 

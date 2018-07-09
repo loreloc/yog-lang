@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "errors.h"
+#include "error.h"
 #include "token.h"
 
 /*! @brief The lexical context data structure */
