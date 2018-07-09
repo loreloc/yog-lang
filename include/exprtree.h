@@ -52,19 +52,19 @@ struct expr_tree
  * @brief Allocate a new expression tree with a operator node
  * @param op The operator value
  */
-struct expr_tree *expr_tree_make_op(enum operator op);
+struct expr_tree *expr_tree_make_operator(enum operator op);
 
 /**
  * @brief Allocate a new expression tree with a literal node
  * @param lit The literal value
  */
-struct expr_tree *expr_tree_make_lit(int64_t lit);
+struct expr_tree *expr_tree_make_literal(int64_t lit);
 
 /**
  * @brief Allocate a new expression tree with a symbol pointer node
  * @param sym The symbol pointer value
  */
-struct expr_tree *expr_tree_make_sym(struct symbol *sym);
+struct expr_tree *expr_tree_make_symbol(struct symbol *sym);
 
 /**
  * @brief Clear an expression tree

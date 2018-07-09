@@ -1,7 +1,7 @@
 
 #include "exprtree.h"
 
-struct expr_tree *expr_tree_make_op(enum operator op)
+struct expr_tree *expr_tree_make_operator(enum operator op)
 {
 	struct expr_tree *new_tree = ymalloc(sizeof(struct expr_tree));
 
@@ -13,7 +13,7 @@ struct expr_tree *expr_tree_make_op(enum operator op)
 	return new_tree;
 }
 
-struct expr_tree *expr_tree_make_lit(int64_t lit)
+struct expr_tree *expr_tree_make_literal(int64_t lit)
 {
 	struct expr_tree *new_tree = ymalloc(sizeof(struct expr_tree));
 
@@ -25,7 +25,7 @@ struct expr_tree *expr_tree_make_lit(int64_t lit)
 	return new_tree;
 }
 
-struct expr_tree *expr_tree_make_sym(struct symbol *sym)
+struct expr_tree *expr_tree_make_symbol(struct symbol *sym)
 {
 	struct expr_tree *new_tree = ymalloc(sizeof(struct expr_tree));
 

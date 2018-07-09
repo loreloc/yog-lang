@@ -144,7 +144,7 @@ struct expr_tree *parse_expression(struct parse_context *ctx)
 	while(accept_token(ctx, TOKEN_PLUS | TOKEN_MINUS))
 	{
 		enum operator op = (tok.type == TOKEN_PLUS) ? OP_PLUS : OP_MINUS;
-		struct expr_tree *tmp = expr_tree_make_op(op);
+		struct expr_tree *tmp = expr_tree_make_operator(op);
 
 		tmp->left = tree;
 		tmp->right = parse_term(ctx);
@@ -167,7 +167,7 @@ struct expr_tree *parse_term(struct parse_context *ctx)
 	while(accept_token(ctx, TOKEN_MUL | TOKEN_DIV))
 	{
 		enum operator op = (tok.type == TOKEN_MUL) ? OP_MUL : OP_DIV;
-		struct expr_tree *tmp = expr_tree_make_op(op);
+		struct expr_tree *tmp = expr_tree_make_operator(op);
 
 		tmp->left = tree;
 		tmp->right = parse_factor(ctx);
@@ -185,11 +185,11 @@ struct expr_tree *parse_factor(struct parse_context *ctx)
 
 	if(accept_token(ctx, TOKEN_LITERAL))
 	{
-		tree = expr_tree_make_lit(tok.value.lit);
+		tree = expr_tree_make_literal(tok.value.lit);
 	}
 	else if(accept_token(ctx, TOKEN_IDENTIFIER))
 	{
-		tree = expr_tree_make_sym(tok.value.sym);
+		tree = expr_tree_make_symbol(tok.value.sym);
 	}
 	else if(accept_token(ctx, TOKEN_LPAREN))
 	{
@@ -202,7 +202,7 @@ struct expr_tree *parse_factor(struct parse_context *ctx)
 		error_list_add_syntactic(ctx->errs, ctx->tok.loc, ctx->tok.type, TOKEN_LITERAL | TOKEN_IDENTIFIER);
 		next_token(ctx);
 
-		tree = expr_tree_make_lit(0);
+		tree = expr_tree_make_literal(0);
 	}
 
 	return tree;
