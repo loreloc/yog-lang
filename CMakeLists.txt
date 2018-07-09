@@ -34,7 +34,7 @@ set(YOG_SRC ${YOG_SRC_DIR}/yog.c
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -std=c99 -Wall -Wextra")
 
 # set c compiler release flags
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -std=c99 -Wall -Wextra")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -std=c99")
 
 # yog interpreter executable
 add_executable(yog ${YOG_SRC})
