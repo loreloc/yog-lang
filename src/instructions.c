@@ -44,7 +44,7 @@ void instr_list_add(struct instr_list *instrs, struct instr *new_node)
 	}
 }
 
-void instr_list_add_assignment(struct instr_list *instrs, struct symbol *sym, struct expr_tree *tree)
+void instr_list_add_assign(struct instr_list *instrs, struct symbol *sym, struct expr_tree *tree)
 {
 	struct instr *new_node = ymalloc(sizeof(struct instr));
 

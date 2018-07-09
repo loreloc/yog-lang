@@ -67,12 +67,12 @@ bool instr_list_empty(struct instr_list instrs);
 void instr_list_add(struct instr_list *instrs, struct instr *new_node);
 
 /**
- * @brief Add a new assignment instruction to an instruction list
+ * @brief Add a new assign instruction to an instruction list
  * @param instrs A pointer to the instructions list
  * @param sym A pointer to the destination identifier symbol
  * @param tree A pointer to the source expression tree
  */
-void instr_list_add_assignment(struct instr_list *instrs, struct symbol *sym, struct expr_tree *tree);
+void instr_list_add_assign(struct instr_list *instrs, struct symbol *sym, struct expr_tree *tree);
 
 /**
  * @brief Add a new input instruction to an instruction list

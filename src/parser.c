@@ -105,7 +105,7 @@ void parse_statements(struct parse_context *ctx)
 		if(accept_token(ctx, TOKEN_IDENTIFIER))
 		{
 			if(expect_token(ctx, TOKEN_EQUAL))
-				instr_list_add_assignment(&ctx->instrs, sym, parse_expression(ctx));
+				instr_list_add_assign(&ctx->instrs, sym, parse_expression(ctx));
 		}
 		else if(accept_token(ctx, TOKEN_READ))
 		{
