@@ -40,15 +40,17 @@ struct token make_token_word(char *text, struct symbol_table *st, struct locatio
 struct token make_token_operator(char *text, struct location loc);
 struct token make_token_paren(char *text, struct location loc);
 
-void lex_context_init(struct lex_context *ctx, FILE *source)
+void lex_context_init(struct lex_context *ctx, FILE *source, struct symbol_table *st, struct error_list *errs)
 {
 	ctx->source = source;
 	ctx->lookahead = '\0';
 	ctx->loc.row = 1;
 	ctx->loc.col = 1;
+	ctx->st = st;
+	ctx->errs = errs;
 }
 
-struct token lex(struct lex_context *ctx, struct symbol_table *st, struct error_list *errs)
+struct token lex(struct lex_context *ctx)
 {
 	char text[TEXT_SIZE] = { '\0' };
 	size_t text_len = 0;
@@ -83,7 +85,7 @@ struct token lex(struct lex_context *ctx, struct symbol_table *st, struct error_
 		}
 		else if(state == FSA_ERROR && new_state != FSA_ERROR)
 		{
-			error_list_add_lexical(errs, text_loc, (text_len < TEXT_SIZE) ? text : TEXT_OVERFLOW_MSG);
+			error_list_add_lexical(ctx->errs, text_loc, (text_len < TEXT_SIZE) ? text : TEXT_OVERFLOW_MSG);
 			memset(text, '\0', TEXT_SIZE);
 			text_len = 0;
 			new_state = FSA_START;
@@ -92,7 +94,7 @@ struct token lex(struct lex_context *ctx, struct symbol_table *st, struct error_
 		{
 			if(text_len == TEXT_SIZE)
 			{
-				error_list_add_lexical(errs, text_loc, TEXT_OVERFLOW_MSG);
+				error_list_add_lexical(ctx->errs, text_loc, TEXT_OVERFLOW_MSG);
 				memset(text, '\0', TEXT_SIZE);
 				text_len = 0;
 				new_state = FSA_START;
@@ -125,7 +127,7 @@ struct token lex(struct lex_context *ctx, struct symbol_table *st, struct error_
 			result.loc = text_loc;
 			break;
 		case FSA_WORD:
-			result = make_token_word(text, st, text_loc);
+			result = make_token_word(text, ctx->st, text_loc);
 			break;
 		case FSA_OPERATOR:
 			result = make_token_operator(text, text_loc);

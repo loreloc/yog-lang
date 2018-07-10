@@ -15,7 +15,7 @@ struct expr_tree *parse_factor(struct parse_context *ctx);
 void parse_context_init(struct parse_context *ctx, FILE *source, struct symbol_table *st, struct error_list *errs)
 {
 	// initialize the lexical context
-	lex_context_init(&ctx->lex_ctx, source);
+	lex_context_init(&ctx->lex_ctx, source, st, errs);
 
 	ctx->st = st;
 	ctx->errs = errs;
@@ -32,7 +32,7 @@ void parse(struct parse_context *ctx)
 
 void next_token(struct parse_context *ctx)
 {
-	ctx->tok = lex(&ctx->lex_ctx, ctx->st, ctx->errs);
+	ctx->tok = lex(&ctx->lex_ctx);
 }
 
 bool check_token(struct parse_context *ctx, enum token_type types)
