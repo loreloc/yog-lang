@@ -191,6 +191,18 @@ struct expr_tree *parse_factor(struct parse_context *ctx)
 	{
 		tree = expr_tree_make_symbol(tok.value.sym);
 	}
+	else if(accept_token(ctx, TOKEN_PLUS))
+	{
+		tree = expr_tree_make_operator(OP_PLUS);
+
+		tree->right = parse_expression(ctx);
+	}
+	else if(accept_token(ctx, TOKEN_MINUS))
+	{
+		tree = expr_tree_make_operator(OP_MINUS);
+
+		tree->right = parse_expression(ctx);
+	}
 	else if(accept_token(ctx, TOKEN_LPAREN))
 	{
 		tree = parse_expression(ctx);

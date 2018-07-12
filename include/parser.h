@@ -58,7 +58,9 @@ void parse_context_init(struct parse_context *ctx, FILE *source, struct symbol_t
  * 
  * <term> ::= <factor> | <factor> "*" <factor> | <factor> "/" <factor>
  * 
- * <factor> ::= "literal" | "identifier"
+ * <factor> ::=   "literal" | "identifier"
+ *              | "+" <expression> | "-" <expression>
+ *              | "(" <expression> ")"
  * ```
  * @param ctx A pointer to the parse context
  */
