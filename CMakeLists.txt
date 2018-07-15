@@ -29,6 +29,7 @@ set(YOG_SRC ${YOG_SRC_DIR}/yog.c
             ${YOG_SRC_DIR}/instruction.c
             ${YOG_SRC_DIR}/scanner.c
             ${YOG_SRC_DIR}/parser.c
+            ${YOG_SRC_DIR}/semanter.c
             ${YOG_SRC_DIR}/interpreter.c)
 
 # set c compiler debug flags

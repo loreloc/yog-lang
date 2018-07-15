@@ -1,6 +1,8 @@
 
 /*! @file ast.h */
 
+#pragma once
+
 #include <stdarg.h>
 #include "symtable.h"
 

@@ -1,5 +1,6 @@
 
 #include "parser.h"
+#include "semanter.h"
 #include "interpreter.h"
 
 int main(int argc, char* argv[])
@@ -42,10 +43,26 @@ int main(int argc, char* argv[])
 	}
 	else
 	{
-		// TODO: semantic analysis
+		// initialize the semantic analysis context
+		struct semantic_context sem_ctx;
+		semantic_context_init(&sem_ctx, &st, &errs, tree);
+
+		// analyse the abstract syntax tree
+		struct instr_list instrs = semantic_context_analyse(&sem_ctx);
+
+		// initialzie the interpreter
+		struct interpreter vm;
+		interpreter_init(&vm, instrs);
+
+		// execute the instructions
+		interpreter_execute(&vm);
+
+		// clean the instruction list
+		instr_list_clear(&instrs);
 	}
 
 	// cleanup
+	ast_clear(tree);
 	symbol_table_clear(&st);
 	error_list_clear(&errs);
 	fclose(source);
