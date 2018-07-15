@@ -1,32 +1,13 @@
 
 #include "ast.h"
 
-struct ast *ast_make_nonterminal(enum ast_node_type type, size_t count, ...)
+struct ast *ast_make(enum ast_node_type type)
 {
 	struct ast *tree = ymalloc(sizeof(struct ast));
 
 	tree->type = type;
-	tree->subtrees_cnt = count;
-	tree->subtrees = ycalloc(count, sizeof(struct ast *));
-
-	va_list subtrees;
-	va_start(subtrees, count);
-
-	for(size_t i = 0; i < tree->subtrees_cnt; ++i)
-		tree->subtrees[i] = va_arg(subtrees, struct ast *);
-
-	va_end(subtrees);
-
-	return tree;
-}
-
-struct ast *ast_make_terminal(enum ast_node_type type)
-{
-	struct ast *tree = ymalloc(sizeof(struct ast));
-
-	tree->type = type;
-	tree->subtrees_cnt = 0;
-	tree->subtrees = NULL;
+	tree->next = NULL;
+	tree->subtree = NULL;
 
 	return tree;
 }
@@ -36,10 +17,68 @@ void ast_clear(struct ast *tree)
 	if(tree == NULL)
 		return;
 
-	// clear the abstract syntax subtrees
-	for(size_t i = 0; i < tree->subtrees_cnt; ++i)
-		ast_clear(tree->subtrees[i]);
+	// clear the abstract syntax subtree
+	ast_clear(tree->subtree);
+
+	// clear the next abstract syntax tree
+	ast_clear(tree->next);
 
 	yfree(tree);
+}
+
+void ast_add_subtree(struct ast *tree, struct ast *new_tree)
+{
+	struct ast *tmp = tree->subtree;
+
+	if(tmp == NULL)
+	{
+		tree->subtree = new_tree;
+	}
+	else
+	{
+		while(tmp->next != NULL)
+			tmp = tmp->next;
+
+		tmp->next = new_tree;
+	}
+}
+
+struct ast *ast_add_subtree_node(struct ast *tree, enum ast_node_type type)
+{
+	struct ast *new_tree = ast_make(type);
+
+	ast_add_subtree(tree, new_tree);
+
+	return new_tree;
+}
+
+struct ast *ast_add_subtree_literal(struct ast *tree, int64_t lit)
+{
+	struct ast *new_tree = ast_make(AST_NODE_LITERAL);
+	new_tree->value.lit = lit;
+
+	ast_add_subtree(tree, new_tree);
+
+	return new_tree;
+}
+
+struct ast *ast_add_subtree_symbol(struct ast *tree, struct symbol *sym)
+{
+	struct ast *new_tree = ast_make(AST_NODE_IDENTIFIER);
+	new_tree->value.sym = sym;
+
+	ast_add_subtree(tree, new_tree);
+
+	return new_tree;
+}
+
+struct ast* ast_get_subtree(struct ast *tree, size_t index)
+{
+	struct ast *tmp = tree->subtree;
+
+	for(size_t i = 0; i < index; ++i)
+		tmp = tmp->next;
+
+	return tmp;
 }
 
