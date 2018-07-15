@@ -24,6 +24,7 @@ set(YOG_SRC ${YOG_SRC_DIR}/yog.c
             ${YOG_SRC_DIR}/error.c
             ${YOG_SRC_DIR}/token.c
             ${YOG_SRC_DIR}/symtable.c
+            ${YOG_SRC_DIR}/ast.c
             ${YOG_SRC_DIR}/exprtree.c
             ${YOG_SRC_DIR}/instruction.c
             ${YOG_SRC_DIR}/scanner.c

@@ -9,10 +9,10 @@
 
 /**
  * @brief Custom succeed-or-die memory allocation function
- * @param bytes The number of bytes to allocate
+ * @param size The number of bytes to allocate
  * @return A pointer to the allocated memory block of size at least 1 byte
  */
-void *ymalloc(size_t bytes);
+void *ymalloc(size_t size);
 
 /**
  * @brief Custom succeed-or-die zero initialized memory allocation function
@@ -25,7 +25,7 @@ void *ycalloc(size_t num, size_t size);
 /**
  * @brief Custom succeed-or-die memory reallocation function
  * @param ptr A pointer to the memory block to reallocate
- * @param bytes The number of bytes to reallocate
+ * @param size The number of bytes to reallocate
  * @return A pointer to the reallocated memory block of size at least 1 byte
  */
 void *yrealloc(void *ptr, size_t size);

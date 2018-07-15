@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 	parse_context_init(&ctx, source, &st, &errs);
 
 	// parse the source code
-	parse(&ctx);
+	struct ast *tree = parse(&ctx);
 
 	// check the error list
 	if(!error_list_empty(errs))
@@ -42,16 +42,10 @@ int main(int argc, char* argv[])
 	}
 	else
 	{
-		// initialize the interpreter
-		struct interpreter vm;
-		interpreter_init(&vm, ctx.instrs);
-
-		// execute the interpreter
-		interpreter_execute(&vm);
+		// TODO: semantic analysis
 	}
 
 	// cleanup
-	instr_list_clear(&ctx.instrs);
 	symbol_table_clear(&st);
 	error_list_clear(&errs);
 	fclose(source);

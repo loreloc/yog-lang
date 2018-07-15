@@ -4,7 +4,7 @@
 #pragma once
 
 #include "scanner.h"
-#include "instruction.h"
+#include "ast.h"
 
 /*! @brief The parse context data structure */
 struct parse_context
@@ -17,9 +17,6 @@ struct parse_context
 
 	/*! @brief A pointer to the error list */
 	struct error_list *errs;
-
-	/*! @brief The instructions list */
-	struct instr_list instrs;
 	
 	/*! @brief The current extracted token */
 	struct token tok;
@@ -63,6 +60,7 @@ void parse_context_init(struct parse_context *ctx, FILE *source, struct symbol_t
  *              | "(" <expression> ")"
  * ```
  * @param ctx A pointer to the parse context
+ * @return The abstract syntax tree of the source code
  */
-void parse(struct parse_context *ctx);
+struct ast *parse(struct parse_context *ctx);
 

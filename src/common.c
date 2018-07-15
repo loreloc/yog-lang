@@ -1,12 +1,12 @@
 
 #include "common.h"
 
-void *ymalloc(size_t bytes)
+void *ymalloc(size_t size)
 {
-	if(bytes == 0)
-		bytes = 1;
+	if(size == 0)
+		size = 1;
 
-	void *ptr = malloc(bytes);
+	void *ptr = malloc(size);
 	if(ptr == NULL)
 	{
 		fputs("memory allocation failed\n", stderr);
