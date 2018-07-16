@@ -64,18 +64,15 @@ struct ast *parse_source(struct parse_context *ctx)
 {
 	struct ast *tree = ast_make(AST_NODE_SOURCE);
 	
-	if(expect_token(ctx, TOKEN_VAR))
-		ast_add_subtree_node(tree, AST_NODE_VAR);
+	expect_token(ctx, TOKEN_VAR);
 	
 	ast_add_subtree(tree, parse_variables(ctx));
 
-	if(expect_token(ctx, TOKEN_BEGIN))
-		ast_add_subtree_node(tree, AST_NODE_BEGIN);
+	expect_token(ctx, TOKEN_BEGIN);
 
 	ast_add_subtree(tree, parse_statements(ctx));
 	
-	if(expect_token(ctx, TOKEN_END))
-		ast_add_subtree_node(tree, AST_NODE_END);
+	expect_token(ctx, TOKEN_END);
 
 	return tree;
 }
@@ -92,18 +89,17 @@ struct ast *parse_variables(struct parse_context *ctx)
 		if(!accept_token(ctx, TOKEN_IDENTIFIER))
 			break;
 
-		ast_add_subtree_symbol(subtree, sym);
+		bool valid = true;
+		valid &= expect_token(ctx, TOKEN_COLON);
+		valid &= expect_token(ctx, TOKEN_INT);
+		valid &= expect_token(ctx, TOKEN_SEMICOLON);
 
-		if(expect_token(ctx, TOKEN_COLON))
-			ast_add_subtree_node(subtree, AST_NODE_COLON);
-
-		if(expect_token(ctx, TOKEN_INT))
+		if(valid)
+		{
+			ast_add_subtree_symbol(subtree, sym);
 			ast_add_subtree_node(subtree, AST_NODE_INT);
-
-		if(expect_token(ctx, TOKEN_SEMICOLON))
-			ast_add_subtree_node(subtree, AST_NODE_SEMICOLON);
-
-		subtree = ast_add_subtree_node(subtree, AST_NODE_VARIABLES);
+			subtree = ast_add_subtree_node(subtree, AST_NODE_VARIABLES);
+		}
 	}
 
 	return tree;
@@ -119,18 +115,17 @@ struct ast *parse_statements(struct parse_context *ctx)
 		if(check_token(ctx, TOKEN_END | TOKEN_EOF))
 			break;
 
+		struct ast *instr_tree;
 		struct symbol *sym = ctx->tok.value.sym;
 
 		if(accept_token(ctx, TOKEN_IDENTIFIER))
 		{
 			if(expect_token(ctx, TOKEN_EQUAL))
 			{
-				struct ast *assign_tree = ast_make(AST_NODE_ASSIGN);
-				ast_add_subtree_symbol(assign_tree, sym);
-				ast_add_subtree_node(assign_tree, AST_NODE_EQUAL);
-				ast_add_subtree(assign_tree, parse_expression(ctx));
-
-				ast_add_subtree(subtree, assign_tree);
+				instr_tree = ast_make(AST_NODE_ASSIGN);
+				ast_add_subtree_symbol(instr_tree, sym);
+				ast_add_subtree_node(instr_tree, AST_NODE_EQUAL);
+				ast_add_subtree(instr_tree, parse_expression(ctx));
 			}
 		}
 		else if(accept_token(ctx, TOKEN_READ))
@@ -139,32 +134,34 @@ struct ast *parse_statements(struct parse_context *ctx)
 			
 			if(expect_token(ctx, TOKEN_IDENTIFIER))
 			{
-				struct ast *input_tree = ast_make(AST_NODE_INPUT);
-				ast_add_subtree_node(input_tree, AST_NODE_READ);
-				ast_add_subtree_symbol(input_tree, sym);
-
-				ast_add_subtree(subtree, input_tree);
+				instr_tree = ast_make(AST_NODE_INPUT);
+				ast_add_subtree_node(instr_tree, AST_NODE_READ);
+				ast_add_subtree_symbol(instr_tree, sym);
 			}
 		}
 		else if(accept_token(ctx, TOKEN_WRITE))
 		{
-			struct ast *output_tree = ast_make(AST_NODE_OUTPUT);
-			ast_add_subtree_node(output_tree, AST_NODE_WRITE);
-			ast_add_subtree(output_tree, parse_expression(ctx));
-
-			ast_add_subtree(subtree, output_tree);
+			instr_tree = ast_make(AST_NODE_OUTPUT);
+			ast_add_subtree_node(instr_tree, AST_NODE_WRITE);
+			ast_add_subtree(instr_tree, parse_expression(ctx));
 		}
 		else
 		{
 			error_list_add_syntactic(ctx->errs, ctx->tok.loc, ctx->tok.type, TOKEN_IDENTIFIER | TOKEN_READ | TOKEN_WRITE);
 			next_token(ctx);
+
 			continue;
 		}
 
 		if(expect_token(ctx, TOKEN_SEMICOLON))
-			ast_add_subtree_node(subtree, AST_NODE_SEMICOLON);
-
-		subtree = ast_add_subtree_node(subtree, AST_NODE_STATEMENTS);
+		{
+			ast_add_subtree(subtree, instr_tree);
+			subtree = ast_add_subtree_node(subtree, AST_NODE_STATEMENTS);
+		}
+		else
+		{
+			ast_clear(instr_tree);
+		}
 	}
 
 	return tree;

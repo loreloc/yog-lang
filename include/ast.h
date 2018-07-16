@@ -102,12 +102,3 @@ struct ast *ast_add_subtree_literal(struct ast *tree, int64_t lit);
  */
 struct ast *ast_add_subtree_symbol(struct ast *tree, struct symbol *sym);
 
-/**
- * @brief Get a sub-tree of a node
- * @param tree A pointer to the node to scan
- * @param index The index of the sub-tree in the sub-trees list
- * @return The index-th sub-tree of node
- */
-struct ast* ast_get_subtree(struct ast *tree, size_t index);
-
-

@@ -72,13 +72,3 @@ struct ast *ast_add_subtree_symbol(struct ast *tree, struct symbol *sym)
 	return new_tree;
 }
 
-struct ast* ast_get_subtree(struct ast *tree, size_t index)
-{
-	struct ast *tmp = tree->subtree;
-
-	for(size_t i = 0; i < index; ++i)
-		tmp = tmp->next;
-
-	return tmp;
-}
-
