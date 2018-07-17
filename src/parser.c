@@ -55,7 +55,7 @@ bool expect_token(struct parse_context *ctx, enum token_type types)
 	if(accept_token(ctx, types))
 		return true;
 	
-	error_list_add_syntactic(ctx->errs, ctx->tok.loc, ctx->tok.type, types);
+	error_list_add(ctx->errs, error_make_syntactic(ctx->tok.loc, ctx->tok.type, types));
 
 	return false;
 }
@@ -151,7 +151,7 @@ struct ast *parse_statements(struct parse_context *ctx)
 		}
 		else
 		{
-			error_list_add_syntactic(ctx->errs, tok.loc, tok.type, TOKEN_IDENTIFIER | TOKEN_READ | TOKEN_WRITE);
+			error_list_add(ctx->errs, error_make_syntactic(tok.loc, tok.type, TOKEN_IDENTIFIER | TOKEN_READ | TOKEN_WRITE));
 			next_token(ctx);
 			continue;
 		}
@@ -240,7 +240,7 @@ struct ast *parse_factor(struct parse_context *ctx)
 	}
 	else
 	{
-		error_list_add_syntactic(ctx->errs, tok.loc, tok.type, TOKEN_LITERAL | TOKEN_IDENTIFIER);
+		error_list_add(ctx->errs, error_make_syntactic(tok.loc, tok.type, TOKEN_LITERAL | TOKEN_IDENTIFIER));
 		next_token(ctx);
 
 		ast_add_child(tree, ast_make_literal(0));

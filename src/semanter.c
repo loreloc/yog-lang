@@ -51,15 +51,20 @@ struct instr_list analyse_statements(struct semantic_context *ctx)
 		switch(stmt->type)
 		{
 			case AST_ASSIGN:
-				instr_list_add_assign(&instrs, stmt->children[0]->value.sym, convert_expression(stmt->children[2]));
+				instr_list_add(&instrs,
+					instr_make_assign(stmt->children[0]->value.sym,
+						convert_expression(stmt->children[2])));
 				break;
 
 			case AST_INPUT:
-				instr_list_add_input(&instrs, stmt->children[1]->value.sym);
+				instr_list_add(&instrs,
+					instr_make_input(stmt->children[1]->value.sym));
 				break;
 
 			default: // case AST_OUTPUT:
-				instr_list_add_output(&instrs, convert_expression(stmt->children[1]));
+				instr_list_add(&instrs,
+					instr_make_output(
+						convert_expression(stmt->children[1])));
 				break;
 		}
 

@@ -33,17 +33,17 @@ struct error
 		struct
 		{
 			/*! @brief The actual token type found */
-			enum token_type act_type;
+			enum token_type actual;
 
 			/*! @brief The expected token types bit set */
-			enum token_type exp_types;
+			enum token_type expected;
 
 		} syntactic;
 
 	} info; /*!< @brief The informations about the error */
 
 	/*! @brief The next error in the error list */
-	struct error *next; 
+	struct error *next;
 };
 
 /*! @brief The error list data structure */
@@ -55,6 +55,23 @@ struct error_list
 	/*! @brief The tail pointer of the list */
 	struct error *tail;
 };
+
+/**
+ * @brief Make a new lexical error
+ * @param loc The error location in the source code
+ * @param text The string message that rappresents the lexical error
+ * @return A new lexical error
+ */
+struct error *error_make_lexical(struct location loc, const char *text);
+
+/**
+ * @brief Make a new syntactic error
+ * @param loc The error location in the source code
+ * @param actual The actual token type found
+ * @param expected The expected token types bit set
+ * @return A new syntactic error
+ */
+struct error *error_make_syntactic(struct location loc, enum token_type actual, enum token_type expected);
 
 /**
  * @brief Initialize an error list
@@ -84,25 +101,8 @@ void error_list_show(struct error_list errs);
 /**
  * @brief Add a new error node to an error list
  * @param errs A pointer to an error list
- * @param new_node A pointer to the new error node
+ * @param new_err A pointer to the new error node
  */
-void error_list_add(struct error_list *errs, struct error *new_node);
-
-/**
- * @brief Add a new lexical error to an error list
- * @param errs A pointer to an error list
- * @param loc The error location in the source code
- * @param text The string message that rappresents the lexical error
- */
-void error_list_add_lexical(struct error_list *errs, struct location loc, const char *text);
-
-/**
- * @brief Add a new syntactic error to an error list
- * @param errs A pointer to an error list
- * @param loc The error location in the source code
- * @param act_type The actual token type found
- * @param exp_types The expected token types bit set
- */
-void error_list_add_syntactic(struct error_list *errs, struct location loc, enum token_type act_type, enum token_type exp_types);
+void error_list_add(struct error_list *errs, struct error *new_err);
 
 

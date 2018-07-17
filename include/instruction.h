@@ -41,6 +41,28 @@ struct instr_list
 };
 
 /**
+ * @brief Make a new assign instruction
+ * @param sym A pointer to the destination identifier symbol
+ * @param tree A pointer to the source expression tree
+ * @return A new instruction
+ */
+struct instr *instr_make_assign(struct symbol *sym, struct expr_tree *tree);
+
+/**
+ * @brief Make a new input instruction
+ * @param sym A pointer to the identifier symbol to read
+ * @return A new instruction
+ */
+struct instr *instr_make_input(struct symbol *sym);
+
+/**
+ * @brief Make a new output instruction
+ * @param tree A pointer to the expression tree to evaluate and write the result
+ * @return A new instruction
+ */
+struct instr *instr_make_output(struct expr_tree *tree);
+
+/**
  * @brief Initialize an instruction list
  * @param instrs A pointer to the instruction list to initialize
  */
@@ -62,29 +84,7 @@ bool instr_list_empty(struct instr_list instrs);
 /**
  * @brief Add a new instruction node to an instruction list
  * @param instrs A pointer to the instruction list
- * @param new_node A pointer to the new instruction node
+ * @param new_instr A pointer to the new instruction node
  */
-void instr_list_add(struct instr_list *instrs, struct instr *new_node);
-
-/**
- * @brief Add a new assign instruction to an instruction list
- * @param instrs A pointer to the instructions list
- * @param sym A pointer to the destination identifier symbol
- * @param tree A pointer to the source expression tree
- */
-void instr_list_add_assign(struct instr_list *instrs, struct symbol *sym, struct expr_tree *tree);
-
-/**
- * @brief Add a new input instruction to an instruction list
- * @param instrs A pointer to the instructions list
- * @param sym A pointer to the identifier symbol to read
- */
-void instr_list_add_input(struct instr_list *instrs, struct symbol *sym);
-
-/**
- * @brief Add a new output instruction to an instruction list
- * @param instrs A pointer to the instructions list
- * @param tree A pointer to the expression tree to evaluate and write the result
- */
-void instr_list_add_output(struct instr_list *instrs, struct expr_tree *tree);
+void instr_list_add(struct instr_list *instrs, struct instr *new_instr);
 

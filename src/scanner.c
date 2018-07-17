@@ -87,7 +87,7 @@ struct token lex(struct lex_context *ctx)
 		}
 		else if(state == FSA_ERROR && new_state != FSA_ERROR)
 		{
-			error_list_add_lexical(ctx->errs, text_loc, (text_len < TEXT_SIZE) ? text : TEXT_OVERFLOW_MSG);
+			error_list_add(ctx->errs, error_make_lexical(text_loc, (text_len < TEXT_SIZE) ? text : TEXT_OVERFLOW_MSG));
 			memset(text, '\0', TEXT_SIZE);
 			text_len = 0;
 			new_state = FSA_START;
@@ -96,7 +96,7 @@ struct token lex(struct lex_context *ctx)
 		{
 			if(text_len == TEXT_SIZE)
 			{
-				error_list_add_lexical(ctx->errs, text_loc, TEXT_OVERFLOW_MSG);
+				error_list_add(ctx->errs, error_make_lexical(text_loc, TEXT_OVERFLOW_MSG));
 				memset(text, '\0', TEXT_SIZE);
 				text_len = 0;
 				new_state = FSA_START;

@@ -1,6 +1,40 @@
 
 #include "instruction.h"
 
+struct instr *instr_make_assign(struct symbol *sym, struct expr_tree *tree)
+{
+	struct instr *new_instr = ymalloc(sizeof(struct instr));
+
+	new_instr->next = NULL;
+	new_instr->type = INSTR_ASSIGN;
+	new_instr->sym = sym;
+	new_instr->tree = tree;
+
+	return new_instr;
+}
+
+struct instr *instr_make_input(struct symbol *sym)
+{
+	struct instr *new_instr = ymalloc(sizeof(struct instr));
+
+	new_instr->next = NULL;
+	new_instr->type = INSTR_INPUT;
+	new_instr->sym = sym;
+
+	return new_instr;
+}
+
+struct instr *instr_make_output(struct expr_tree *tree)
+{
+	struct instr *new_instr = ymalloc(sizeof(struct instr));
+
+	new_instr->next = NULL;
+	new_instr->type = INSTR_OUTPUT;
+	new_instr->tree = tree;
+
+	return new_instr;
+}
+
 void instr_list_init(struct instr_list *instrs)
 {
 	instrs->head = NULL;
@@ -30,51 +64,17 @@ bool instr_list_empty(struct instr_list instrs)
 	return instrs.head == NULL;
 }
 
-void instr_list_add(struct instr_list *instrs, struct instr *new_node)
+void instr_list_add(struct instr_list *instrs, struct instr *new_instr)
 {
 	if(instr_list_empty(*instrs))
 	{
-		instrs->head = new_node;
-		instrs->tail = new_node;
+		instrs->head = new_instr;
+		instrs->tail = new_instr;
 	}
 	else
 	{
-		instrs->tail->next = new_node;
-		instrs->tail = new_node;
+		instrs->tail->next = new_instr;
+		instrs->tail = new_instr;
 	}
-}
-
-void instr_list_add_assign(struct instr_list *instrs, struct symbol *sym, struct expr_tree *tree)
-{
-	struct instr *new_node = ymalloc(sizeof(struct instr));
-
-	new_node->next = NULL;
-	new_node->type = INSTR_ASSIGN;
-	new_node->sym = sym;
-	new_node->tree = tree;
-
-	instr_list_add(instrs, new_node);
-}
-
-void instr_list_add_input(struct instr_list *instrs, struct symbol *sym)
-{
-	struct instr *new_node = ymalloc(sizeof(struct instr));
-
-	new_node->next = NULL;
-	new_node->type = INSTR_INPUT;
-	new_node->sym = sym;
-
-	instr_list_add(instrs, new_node);
-}
-
-void instr_list_add_output(struct instr_list *instrs, struct expr_tree *tree)
-{
-	struct instr *new_node = ymalloc(sizeof(struct instr));
-
-	new_node->next = NULL;
-	new_node->type = INSTR_OUTPUT;
-	new_node->tree = tree;
-
-	instr_list_add(instrs, new_node);
 }
 

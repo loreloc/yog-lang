@@ -36,6 +36,13 @@ int main(int argc, char* argv[])
 	// parse the source code
 	struct ast *tree = parse(&ctx);
 
+	// check the error list
+	if(!error_list_empty(errs))
+	{
+		error_list_show(errs);
+		goto cleanup;
+	}
+
 	// initialize the semantic analysis context
 	struct semantic_context sem_ctx;
 	semantic_context_init(&sem_ctx, &st, &errs, tree);
@@ -58,8 +65,10 @@ int main(int argc, char* argv[])
 		error_list_show(errs);
 	}
 
-	// cleanup
+	// clean the instruction list
 	instr_list_clear(&instrs);
+
+cleanup:
 	ast_clear(tree);
 	symbol_table_clear(&st);
 	error_list_clear(&errs);
