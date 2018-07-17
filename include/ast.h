@@ -3,43 +3,42 @@
 
 #pragma once
 
-#include <stdarg.h>
 #include "symtable.h"
 
 /*! @brief The types of an abstract syntax tree node */
-enum ast_node_type
+enum ast_type
 {
-	AST_NODE_SOURCE,
-	AST_NODE_VARIABLES,
-	AST_NODE_STATEMENTS,
-	AST_NODE_ASSIGN,
-	AST_NODE_INPUT,
-	AST_NODE_OUTPUT,
-	AST_NODE_EXPRESSION,
-	AST_NODE_TERM,
-	AST_NODE_FACTOR,
-	AST_NODE_VAR,
-	AST_NODE_BEGIN,
-	AST_NODE_END,
-	AST_NODE_INT,
-	AST_NODE_COLON,
-	AST_NODE_SEMICOLON,
-	AST_NODE_READ,
-	AST_NODE_WRITE,
-	AST_NODE_LITERAL,
-	AST_NODE_IDENTIFIER,
-	AST_NODE_PLUS,
-	AST_NODE_MINUS,
-	AST_NODE_MUL,
-	AST_NODE_DIV,
-	AST_NODE_EQUAL
+	AST_SOURCE,
+	AST_VARIABLES,
+	AST_STATEMENTS,
+	AST_ASSIGN,
+	AST_INPUT,
+	AST_OUTPUT,
+	AST_EXPRESSION,
+	AST_TERM,
+	AST_FACTOR,
+	AST_VAR,
+	AST_BEGIN,
+	AST_END,
+	AST_INT,
+	AST_COLON,
+	AST_SEMICOLON,
+	AST_READ,
+	AST_WRITE,
+	AST_LITERAL,
+	AST_IDENTIFIER,
+	AST_PLUS,
+	AST_MINUS,
+	AST_MUL,
+	AST_DIV,
+	AST_EQUAL
 };
 
 /*! @brief Abstract Syntax Tree data structure */
 struct ast
 {
 	/*! @brief The type of the node */
-	enum ast_node_type type;
+	enum ast_type type;
 
 	union
 	{
@@ -51,28 +50,41 @@ struct ast
 
 	} value; /*!< @brief The value of the node */
 
-	/*! @brief The number of sub-trees */
-	size_t subtrees_cnt;
+	/*! @brief The number of children */
+	size_t children_cnt;
 
-	/*! @brief The abstract syntax sub-trees */
-	struct ast **subtrees;
+	/*! @brief The children of the node */
+	struct ast **children;
 };
 
 /**
- * @brief Make a new abstract syntax tree with a non-terminal node
+ * @brief Make a new abstract syntax tree
  * @param type The type of the new node
- * @param count The number of abstract syntax subtrees
- * @param ... The abstract syntax subtrees
  * @return A new abstract syntax tree
  */
-struct ast *ast_make_nonterminal(enum ast_node_type type, size_t count, ...);
+struct ast *ast_make(enum ast_type type);
 
 /**
- * @brief Make a new abstract syntax tree with a terminal node
- * @param type The type of the new node
+ * @brief Make a new children of literal type
+ * @param lit The literal value of the child tree to add
  * @return A new abstract syntax tree
  */
-struct ast *ast_make_terminal(enum ast_node_type type);
+struct ast *ast_make_literal(int64_t lit);
+
+/**
+ * @brief Add a new children of symbol pointer type
+ * @param sym The symbol pointer value of the child tree to add
+ * @return A new abstract syntax tree
+ */
+struct ast *ast_make_symbol(struct symbol *sym);
+
+/**
+ * @brief Add a new children to an abstract syntax tree node
+ * @param tree The abstract syntax tree node
+ * @param child The new child tree to add
+ * @return A pointer to the added child tree
+ */
+struct ast *ast_add_child(struct ast *tree, struct ast *child);
 
 /**
  * @brief Clear an abstract syntax tree

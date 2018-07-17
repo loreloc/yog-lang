@@ -36,32 +36,30 @@ int main(int argc, char* argv[])
 	// parse the source code
 	struct ast *tree = parse(&ctx);
 
+	// initialize the semantic analysis context
+	struct semantic_context sem_ctx;
+	semantic_context_init(&sem_ctx, &st, &errs, tree);
+
+	// analyse the abstract syntax tree
+	struct instr_list instrs = semantic_context_analyse(&sem_ctx);
+
 	// check the error list
-	if(!error_list_empty(errs))
+	if(error_list_empty(errs))
 	{
-		error_list_show(errs);
-	}
-	else
-	{
-		// initialize the semantic analysis context
-		struct semantic_context sem_ctx;
-		semantic_context_init(&sem_ctx, &st, &errs, tree);
-
-		// analyse the abstract syntax tree
-		struct instr_list instrs = semantic_context_analyse(&sem_ctx);
-
 		// initialzie the interpreter
 		struct interpreter vm;
 		interpreter_init(&vm, instrs);
 
 		// execute the instructions
 		interpreter_execute(&vm);
-
-		// clean the instruction list
-		instr_list_clear(&instrs);
+	}
+	else
+	{
+		error_list_show(errs);
 	}
 
 	// cleanup
+	instr_list_clear(&instrs);
 	ast_clear(tree);
 	symbol_table_clear(&st);
 	error_list_clear(&errs);

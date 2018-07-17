@@ -62,32 +62,27 @@ bool expect_token(struct parse_context *ctx, enum token_type types)
 
 struct ast *parse_source(struct parse_context *ctx)
 {
-	struct ast *var_tree = NULL;
-	struct ast *begin_tree = NULL;
-	struct ast *end_tree = NULL;
-	
+	struct ast *tree = ast_make(AST_SOURCE);
+
 	if(expect_token(ctx, TOKEN_VAR))
-		var_tree = ast_make_terminal(AST_NODE_VAR);
+		ast_add_child(tree, ast_make(AST_VAR));
 	
-	struct ast *variables_tree = parse_variables(ctx);
+	ast_add_child(tree, parse_variables(ctx));
 
 	if(expect_token(ctx, TOKEN_BEGIN))
-		begin_tree = ast_make_terminal(AST_NODE_BEGIN);
+		ast_add_child(tree, ast_make(AST_BEGIN));
 
-	struct ast *statements_tree = parse_statements(ctx);
+	ast_add_child(tree, parse_statements(ctx));
 	
 	if(expect_token(ctx, TOKEN_END))
-		end_tree = ast_make_terminal(AST_NODE_END);
+		ast_add_child(tree, ast_make(AST_END));
 
-	return ast_make_nonterminal(AST_NODE_SOURCE, 5,
-		var_tree, variables_tree, begin_tree, statements_tree, end_tree);
+	return tree;
 }
 
 struct ast *parse_variables(struct parse_context *ctx)
 {
-	struct ast *tree = ast_make_nonterminal(AST_NODE_VARIABLES, 5,
-		NULL, NULL, NULL, NULL, NULL);
-
+	struct ast *tree = ast_make(AST_VARIABLES);
 	struct ast *subtree = tree;
 
 	while(true)
@@ -97,31 +92,18 @@ struct ast *parse_variables(struct parse_context *ctx)
 		if(!accept_token(ctx, TOKEN_IDENTIFIER))
 			break;
 
-		struct ast *identifier_tree = ast_make_terminal(AST_NODE_IDENTIFIER);
-		identifier_tree->value.sym = sym;
-
-		struct ast *colon_tree = NULL;
-		struct ast *int_tree = NULL;
-		struct ast *semicolon_tree = NULL;
+		ast_add_child(subtree, ast_make_symbol(sym));
 
 		if(expect_token(ctx, TOKEN_COLON))
-			colon_tree = ast_make_terminal(AST_NODE_COLON);
+			ast_add_child(subtree, ast_make(AST_COLON));
 
 		if(expect_token(ctx, TOKEN_INT))
-			int_tree = ast_make_terminal(AST_NODE_INT);
+			ast_add_child(subtree, ast_make(AST_INT));
 
 		if(expect_token(ctx, TOKEN_SEMICOLON))
-			semicolon_tree = ast_make_terminal(AST_NODE_SEMICOLON);
+			ast_add_child(subtree, ast_make(AST_SEMICOLON));
 
-		subtree->subtrees[0] = identifier_tree;
-		subtree->subtrees[1] = colon_tree;
-		subtree->subtrees[2] = int_tree;
-		subtree->subtrees[3] = semicolon_tree;
-
-		subtree->subtrees[4] = ast_make_nonterminal(AST_NODE_VARIABLES, 5,
-			NULL, NULL, NULL, NULL, NULL);
-
-		subtree = subtree->subtrees[4];
+		subtree = ast_add_child(subtree, ast_make(AST_VARIABLES));
 	}
 
 	return tree;
@@ -129,9 +111,7 @@ struct ast *parse_variables(struct parse_context *ctx)
 
 struct ast *parse_statements(struct parse_context *ctx)
 {
-	struct ast *tree = ast_make_nonterminal(AST_NODE_STATEMENTS, 3,
-		NULL, NULL, NULL);
-
+	struct ast *tree = ast_make(AST_STATEMENTS);
 	struct ast *subtree = tree;
 
 	while(true)
@@ -139,53 +119,49 @@ struct ast *parse_statements(struct parse_context *ctx)
 		if(check_token(ctx, TOKEN_END | TOKEN_EOF))
 			break;
 
-		struct symbol *sym = ctx->tok.value.sym;
+		struct ast *stmt_tree;
+		struct token tok = ctx->tok;
 
 		if(accept_token(ctx, TOKEN_IDENTIFIER))
 		{
 			if(expect_token(ctx, TOKEN_EQUAL))
 			{
-				struct ast *identifier_tree = ast_make_terminal(AST_NODE_IDENTIFIER);
-				identifier_tree->value.sym = sym;
-
-				subtree->subtrees[0] = ast_make_nonterminal(AST_NODE_ASSIGN, 3,
-					identifier_tree, ast_make_terminal(AST_NODE_EQUAL), parse_expression(ctx));
+				stmt_tree = ast_make(AST_ASSIGN);
+				ast_add_child(stmt_tree, ast_make_symbol(tok.value.sym));
+				ast_add_child(stmt_tree, ast_make(AST_EQUAL));
+				ast_add_child(stmt_tree, parse_expression(ctx));
 			}
 		}
 		else if(accept_token(ctx, TOKEN_READ))
 		{
-			sym = ctx->tok.value.sym;
+			tok = ctx->tok;
 			
 			if(expect_token(ctx, TOKEN_IDENTIFIER))
 			{
-				struct ast *identifier_tree = ast_make_terminal(AST_NODE_IDENTIFIER);
-				identifier_tree->value.sym = sym;
-
-				subtree->subtrees[0] = ast_make_nonterminal(AST_NODE_INPUT, 2,
-					ast_make_terminal(AST_NODE_READ), identifier_tree);
+				stmt_tree = ast_make(AST_INPUT);
+				ast_add_child(stmt_tree, ast_make(AST_READ));
+				ast_add_child(stmt_tree, ast_make_symbol(tok.value.sym));
 			}
 		}
 		else if(accept_token(ctx, TOKEN_WRITE))
 		{
-			subtree->subtrees[0] = ast_make_nonterminal(AST_NODE_OUTPUT, 2,
-				ast_make_terminal(AST_NODE_WRITE), parse_expression(ctx));
+			stmt_tree = ast_make(AST_OUTPUT);
+			ast_add_child(stmt_tree, ast_make(AST_WRITE));
+			ast_add_child(stmt_tree, parse_expression(ctx));
 		}
 		else
 		{
-			error_list_add_syntactic(ctx->errs, ctx->tok.loc, ctx->tok.type, TOKEN_IDENTIFIER | TOKEN_READ | TOKEN_WRITE);
+			error_list_add_syntactic(ctx->errs, tok.loc, tok.type, TOKEN_IDENTIFIER | TOKEN_READ | TOKEN_WRITE);
 			next_token(ctx);
 			continue;
 		}
 
+		ast_add_child(subtree, stmt_tree);
+
 		if(expect_token(ctx, TOKEN_SEMICOLON))
-		{
-			subtree->subtrees[1] = ast_make_terminal(AST_NODE_SEMICOLON);
+			ast_add_child(subtree, ast_make(AST_SEMICOLON));
 
-			subtree->subtrees[2] = ast_make_nonterminal(AST_NODE_STATEMENTS, 3,
-				NULL, NULL, NULL);
-
-			subtree = subtree->subtrees[2];
-		}
+		subtree = ast_add_child(subtree, ast_make(AST_STATEMENTS));
 	}
 
 	return tree;
@@ -193,15 +169,20 @@ struct ast *parse_statements(struct parse_context *ctx)
 
 struct ast *parse_expression(struct parse_context *ctx)
 {
-	struct ast *tree = ast_make_nonterminal(AST_NODE_EXPRESSION, 3,
-		parse_term(ctx), NULL, NULL);
+	struct ast *tree = ast_make(AST_EXPRESSION);
+	ast_add_child(tree, parse_term(ctx));
 
 	struct token tok = ctx->tok;
 
 	while(accept_token(ctx, TOKEN_PLUS | TOKEN_MINUS))
 	{
-		tree->subtrees[1] = ast_make_terminal((tok.type == TOKEN_PLUS) ? AST_NODE_PLUS : AST_NODE_MINUS);
-		tree->subtrees[2] = parse_term(ctx);
+		enum ast_type op = (tok.type == TOKEN_PLUS) ? AST_PLUS : AST_MINUS;
+		struct ast *tmp = ast_make(op);
+
+		ast_add_child(tmp, tree);
+		ast_add_child(tmp, parse_term(ctx));
+
+		tree = tmp;
 	}
 
 	return tree;
@@ -209,15 +190,20 @@ struct ast *parse_expression(struct parse_context *ctx)
 
 struct ast *parse_term(struct parse_context *ctx)
 {
-	struct ast *tree = ast_make_nonterminal(AST_NODE_TERM, 3,
-		parse_factor(ctx), NULL, NULL);
+	struct ast *tree = ast_make(AST_TERM);
+	ast_add_child(tree, parse_factor(ctx));
 
 	struct token tok = ctx->tok;
 
 	while(accept_token(ctx, TOKEN_MUL | TOKEN_DIV))
 	{
-		tree->subtrees[1] = ast_make_terminal((tok.type == TOKEN_MUL) ? AST_NODE_MUL : AST_NODE_DIV);
-		tree->subtrees[2] = parse_term(ctx);
+		enum ast_type op = (tok.type == TOKEN_MUL) ? AST_MUL : AST_DIV;
+		struct ast *tmp = ast_make(op);
+
+		ast_add_child(tmp, tree);
+		ast_add_child(tmp, parse_term(ctx));
+
+		tree = tmp;
 	}
 
 	return tree;
@@ -225,41 +211,39 @@ struct ast *parse_term(struct parse_context *ctx)
 
 struct ast *parse_factor(struct parse_context *ctx)
 {
-	struct ast *tree = ast_make_nonterminal(AST_NODE_FACTOR, 1, NULL);
+	struct ast *tree = ast_make(AST_FACTOR);
 
 	struct token tok = ctx->tok;
 
 	if(accept_token(ctx, TOKEN_LITERAL))
 	{
-		tree->subtrees[0] = ast_make_terminal(AST_NODE_LITERAL);
-		tree->subtrees[0]->value.lit = tok.value.lit;
+		ast_add_child(tree, ast_make_literal(tok.value.lit));
 	}
 	else if(accept_token(ctx, TOKEN_IDENTIFIER))
 	{
-		tree->subtrees[0] = ast_make_terminal(AST_NODE_IDENTIFIER);
-		tree->subtrees[0]->value.sym = tok.value.sym;
+		ast_add_child(tree, ast_make_symbol(tok.value.sym));
 	}
 	else if(accept_token(ctx, TOKEN_PLUS))
 	{
-		tree->subtrees[0] = ast_make_nonterminal(AST_NODE_PLUS, 1, parse_expression(ctx));
+		struct ast *plus_tree = ast_add_child(tree, ast_make(AST_PLUS));
+		ast_add_child(plus_tree, parse_expression(ctx));
 	}
 	else if(accept_token(ctx, TOKEN_MINUS))
 	{
-		tree->subtrees[0] = ast_make_nonterminal(AST_NODE_MINUS, 1, parse_expression(ctx));
+		struct ast *plus_tree = ast_add_child(tree, ast_make(AST_MINUS));
+		ast_add_child(plus_tree, parse_expression(ctx));
 	}
 	else if(accept_token(ctx, TOKEN_LPAREN))
 	{
-		tree->subtrees[0] = parse_expression(ctx);
-
+		ast_add_child(tree, parse_expression(ctx));
 		expect_token(ctx, TOKEN_RPAREN);
 	}
 	else
 	{
-		error_list_add_syntactic(ctx->errs, ctx->tok.loc, ctx->tok.type, TOKEN_LITERAL | TOKEN_IDENTIFIER);
+		error_list_add_syntactic(ctx->errs, tok.loc, tok.type, TOKEN_LITERAL | TOKEN_IDENTIFIER);
 		next_token(ctx);
 
-		tree->subtrees[0] = ast_make_terminal(AST_NODE_LITERAL);
-		tree->subtrees[0]->value.lit = 0;
+		ast_add_child(tree, ast_make_literal(0));
 	}
 
 	return tree;

@@ -3,7 +3,7 @@
 
 void analyse_variables(struct semantic_context *ctx);
 struct instr_list analyse_statements(struct semantic_context *ctx);
-struct expr_tree *translate_ast_expr_tree(struct ast *syn_tree);
+struct expr_tree *convert_expression(struct ast *tree);
 
 void semantic_context_init(struct semantic_context *ctx, struct symbol_table *st, struct error_list *errs, struct ast *tree)
 {
@@ -23,15 +23,17 @@ struct instr_list semantic_context_analyse(struct semantic_context *ctx)
 
 void analyse_variables(struct semantic_context *ctx)
 {
-	struct ast *tmp = ctx->tree->subtrees[1];
-	struct ast *id = tmp->subtrees[0];
-
-	while(id != NULL)
+	struct ast *tmp = ctx->tree->children[1];
+	
+	while(tmp->children != NULL)
 	{
-		id->value.sym->type = SYMBOL_INTEGER;
+		struct ast *var_id   = tmp->children[0];
+		struct ast *var_type = tmp->children[2];
 
-		tmp = tmp->subtrees[4];
-		id = tmp->subtrees[0];
+		if(var_type->type == AST_INT)
+			var_id->value.sym->type = SYMBOL_INTEGER;
+
+		tmp = tmp->children[4];
 	}
 }
 
@@ -40,88 +42,92 @@ struct instr_list analyse_statements(struct semantic_context *ctx)
 	struct instr_list instrs;
 	instr_list_init(&instrs);
 
-	struct ast *tmp = ctx->tree->subtrees[3];
-	struct ast *statement = tmp->subtrees[0];
+	struct ast *tmp = ctx->tree->children[3];
 
-	while(statement != NULL)
+	while(tmp->children != NULL)
 	{
-		switch(statement->type)
+		struct ast *stmt = tmp->children[0];
+
+		switch(stmt->type)
 		{
-			case AST_NODE_ASSIGN:
-				instr_list_add_assign(&instrs,
-					statement->subtrees[0]->value.sym,
-					translate_ast_expr_tree(statement->subtrees[2]));
+			case AST_ASSIGN:
+				instr_list_add_assign(&instrs, stmt->children[0]->value.sym, convert_expression(stmt->children[2]));
 				break;
 
-			case AST_NODE_INPUT:
-				instr_list_add_input(&instrs,
-					statement->subtrees[1]->value.sym);
+			case AST_INPUT:
+				instr_list_add_input(&instrs, stmt->children[1]->value.sym);
 				break;
 
-			default: // case AST_NODE_OUTPUT:
-				instr_list_add_output(&instrs,
-					translate_ast_expr_tree(statement->subtrees[1]));
+			default: // case AST_OUTPUT:
+				instr_list_add_output(&instrs, convert_expression(stmt->children[1]));
 				break;
 		}
 
-		tmp = tmp->subtrees[2];
-		statement = tmp->subtrees[0];
+		tmp = tmp->children[2];
 	}
 
 	return instrs;
 }
 
-struct expr_tree *translate_ast_expr_tree(struct ast *syn_tree)
+struct expr_tree *convert_expression(struct ast *tree)
 {
-	struct expr_tree *tree;
+	struct expr_tree *expression;
 
-	switch(syn_tree->type)
+	switch(tree->type)
 	{
-		case AST_NODE_EXPRESSION:
-			if(syn_tree->subtrees[1] != NULL)
+		case AST_EXPRESSION:
+		case AST_TERM:
+		case AST_FACTOR:
+			expression = convert_expression(tree->children[0]);
+			break;
+
+		case AST_PLUS:
+			expression = expr_tree_make_operator(OP_PLUS);
+			if(tree->children_cnt == 2)
 			{
-				tree = expr_tree_make_operator((syn_tree->subtrees[1]->type == AST_NODE_PLUS) ? OP_PLUS : OP_MINUS);
-				tree->left = translate_ast_expr_tree(syn_tree->subtrees[0]);
-				tree->right = translate_ast_expr_tree(syn_tree->subtrees[2]);
+				expression->left  = convert_expression(tree->children[0]);
+				expression->right = convert_expression(tree->children[1]);
 			}
-			else
-				tree = translate_ast_expr_tree(syn_tree->subtrees[0]);
-			break;
-
-		case AST_NODE_TERM:
-			if(syn_tree->subtrees[1] != NULL)
+			else // unary plus
 			{
-				tree = expr_tree_make_operator((syn_tree->subtrees[1]->type == AST_NODE_MUL) ? OP_MUL : OP_DIV);
-				tree->left = translate_ast_expr_tree(syn_tree->subtrees[0]);
-				tree->right = translate_ast_expr_tree(syn_tree->subtrees[2]);
+				expression->right = convert_expression(tree->children[0]);
 			}
-			else
-				tree = translate_ast_expr_tree(syn_tree->subtrees[0]);
 			break;
 
-		case AST_NODE_FACTOR:
-			tree = translate_ast_expr_tree(syn_tree->subtrees[0]);
+		case AST_MINUS:
+			expression = expr_tree_make_operator(OP_MINUS);
+			if(tree->children_cnt == 2)
+			{
+				expression->left  = convert_expression(tree->children[0]);
+				expression->right = convert_expression(tree->children[1]);
+			}
+			else // unary minus
+			{
+				expression->right = convert_expression(tree->children[0]);
+			}
 			break;
 
-		case AST_NODE_PLUS:
-			tree = expr_tree_make_operator(OP_PLUS);
-			tree->right = translate_ast_expr_tree(syn_tree->subtrees[0]);
+		case AST_MUL:
+			expression = expr_tree_make_operator(OP_MUL);
+			expression->left  = convert_expression(tree->children[0]);
+			expression->right = convert_expression(tree->children[1]);
 			break;
 
-		case AST_NODE_MINUS:
-			tree = expr_tree_make_operator(OP_MINUS);
-			tree->right = translate_ast_expr_tree(syn_tree->subtrees[0]);
+		case AST_DIV:
+			expression = expr_tree_make_operator(OP_DIV);
+			expression->left  = convert_expression(tree->children[0]);
+			expression->right = convert_expression(tree->children[1]);
 			break;
 
-		case AST_NODE_LITERAL:
-			tree = expr_tree_make_literal(syn_tree->value.lit);
+		case AST_LITERAL:
+			expression = expr_tree_make_literal(tree->value.lit);
 			break;
 
-		default: // case AST_NODE_IDENTIFIER:
-			tree = expr_tree_make_symbol(syn_tree->value.sym);
+		default: // case AST_IDENTIFIER:
+			expression = expr_tree_make_symbol(tree->value.sym);
 			break;
 	}
 
-	return tree;
+	return expression;
 }
 

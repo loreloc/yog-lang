@@ -17,7 +17,7 @@ struct parse_context
 
 	/*! @brief A pointer to the error list */
 	struct error_list *errs;
-	
+
 	/*! @brief The current extracted token */
 	struct token tok;
 };
