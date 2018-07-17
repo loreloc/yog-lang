@@ -50,7 +50,7 @@ struct instr_list analyse_statements(struct semantic_context *ctx)
 			case AST_NODE_ASSIGN:
 				instr_list_add_assign(&instrs,
 					statement->subtree->value.sym,
-					translate_ast_expr_tree(statement->subtree->next));
+					translate_ast_expr_tree(statement->subtree->next->next));
 				break;
 
 			case AST_NODE_INPUT:

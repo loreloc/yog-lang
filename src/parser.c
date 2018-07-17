@@ -124,6 +124,7 @@ struct ast *parse_statements(struct parse_context *ctx)
 			{
 				instr_tree = ast_make(AST_NODE_ASSIGN);
 				ast_add_subtree_symbol(instr_tree, sym);
+				ast_add_subtree_node(instr_tree, AST_NODE_EQUAL);
 				ast_add_subtree(instr_tree, parse_expression(ctx));
 			}
 		}
