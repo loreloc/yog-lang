@@ -51,63 +51,32 @@ struct ast
 
 	} value; /*!< @brief The value of the node */
 
-	/*! @brief The next abstract syntax tree at the same level */
-	struct ast *next;
+	/*! @brief The number of sub-trees */
+	size_t subtrees_cnt;
 
-	/*! @brief The next abstract syntax tree at an inferior level*/
-	struct ast *subtree;
+	/*! @brief The abstract syntax sub-trees */
+	struct ast **subtrees;
 };
 
 /**
- * @brief Make a new abstract syntax tree
+ * @brief Make a new abstract syntax tree with a non-terminal node
+ * @param type The type of the new node
+ * @param count The number of abstract syntax subtrees
+ * @param ... The abstract syntax subtrees
+ * @return A new abstract syntax tree
+ */
+struct ast *ast_make_nonterminal(enum ast_node_type type, size_t count, ...);
+
+/**
+ * @brief Make a new abstract syntax tree with a terminal node
  * @param type The type of the new node
  * @return A new abstract syntax tree
  */
-struct ast *ast_make(enum ast_node_type type);
+struct ast *ast_make_terminal(enum ast_node_type type);
 
 /**
  * @brief Clear an abstract syntax tree
  * @param tree A pointer to the abstract syntax tree to clear
  */
 void ast_clear(struct ast *tree);
-
-/**
- * @brief Add a new abstract syntax sub-tree to a node
- * @param tree A pointer to the node to modify
- * @param new_tree The new abstract syntax tree to add
- */
-void ast_add_subtree(struct ast *tree, struct ast *new_tree);
-
-/**
- * @brief Add a new abstract syntax sub-tree to a node
- * @param tree A pointer to the node to modify
- * @param type The type of the node of the abstract syntax tree to add
- * @return A pointer to the added sub-tree
- */
-struct ast *ast_add_subtree_node(struct ast *tree, enum ast_node_type type);
-
-/**
- * @brief Add a new abstract syntax sub-tree to a node with a literal node
- * @param tree A pointer to the node to modify
- * @param lit The literal value
- * @return A pointer to the added sub-tree
- */
-struct ast *ast_add_subtree_literal(struct ast *tree, int64_t lit);
-
-/**
- * @brief Add a new abstract syntax sub-tree to a node with a symbol pointer node
- * @param tree A pointer to the node to modify
- * @param sym A pointer to a symbol
- * @return A pointer to the added sub-tree
- */
-struct ast *ast_add_subtree_symbol(struct ast *tree, struct symbol *sym);
-
-/**
- * @brief Get a sub-tree of a node
- * @param tree A pointer to the node to scan
- * @param index The index of the sub-tree in the sub-trees list
- * @return The index-th sub-tree of node
- */
-struct ast* ast_get_subtree(struct ast *tree, size_t index);
-
 
