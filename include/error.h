@@ -10,6 +10,7 @@ enum error_type
 {
 	ERROR_LEXICAL,
 	ERROR_SYNTACTIC,
+	ERROR_SEMANTIC
 };
 
 /*! @brief The node of the error list */
@@ -39,6 +40,13 @@ struct error
 			enum token_type expected;
 
 		} syntactic;
+
+		struct
+		{
+			/*! @brief A symbol pointer to the undefined variable */
+			struct symbol *sym;
+
+		} semantic;
 
 	} info; /*!< @brief The informations about the error */
 
@@ -72,6 +80,14 @@ struct error *error_make_lexical(struct location loc, const char *text);
  * @return A new syntactic error
  */
 struct error *error_make_syntactic(struct location loc, enum token_type actual, enum token_type expected);
+
+/**
+ * @brief Make a new semantic error
+ * @param loc The error location in the source code
+ * @param sym A pointer to the undefined variable
+ * @return A new semantic error
+ */
+struct error *error_make_semantic(struct location loc, struct symbol *sym);
 
 /**
  * @brief Initialize an error list

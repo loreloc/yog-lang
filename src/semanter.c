@@ -3,9 +3,15 @@
 
 void analyse_variables(struct semantic_context *ctx);
 struct instr_list analyse_statements(struct semantic_context *ctx);
-struct expr_tree *convert_expression(struct ast *expression);
-struct expr_tree *convert_term(struct ast *term);
-struct expr_tree *convert_factor(struct ast *factor);
+
+bool accept_variable(struct semantic_context *ctx, struct token tok);
+void instructions_add_assign(struct instr_list* instrs, struct semantic_context *ctx, struct ast* stmt);
+void instructions_add_input(struct instr_list* instrs, struct semantic_context *ctx, struct ast* stmt);
+void instructions_add_output(struct instr_list* instrs, struct semantic_context *ctx, struct ast* stmt);
+
+struct expr_tree *convert_expression(struct semantic_context *ctx, struct ast *expression);
+struct expr_tree *convert_term(struct semantic_context *ctx, struct ast *term);
+struct expr_tree *convert_factor(struct semantic_context *ctx, struct ast *factor);
 
 void semantic_context_init(struct semantic_context *ctx, struct symbol_table *st, struct error_list *errs, struct ast *tree)
 {
@@ -41,8 +47,8 @@ void analyse_variables(struct semantic_context *ctx)
 
 struct instr_list analyse_statements(struct semantic_context *ctx)
 {
-	struct instr_list instructions;
-	instr_list_init(&instructions);
+	struct instr_list instrs;
+	instr_list_init(&instrs);
 
 	struct ast *statements = ctx->tree->children[3];
 
@@ -53,31 +59,65 @@ struct instr_list analyse_statements(struct semantic_context *ctx)
 		switch(stmt->value.nt)
 		{
 			case AST_NT_ASSIGN:
-				instr_list_add(&instructions,
-					instr_make_assign(stmt->children[0]->value.tok.value.sym,
-						convert_expression(stmt->children[2])));
+				instructions_add_assign(&instrs, ctx, stmt);
 				break;
 
 			case AST_NT_INPUT:
-				instr_list_add(&instructions,
-					instr_make_input(stmt->children[1]->value.tok.value.sym));
+				instructions_add_input(&instrs, ctx, stmt);
 				break;
 
 			default: // case AST_NT_OUTPUT:
-				instr_list_add(&instructions,
-					instr_make_output(convert_expression(stmt->children[1])));
+				instructions_add_output(&instrs, ctx, stmt);
 				break;
 		}
 
 		statements = statements->children[2];
 	}
 
-	return instructions;
+	return instrs;
 }
 
-struct expr_tree *convert_expression(struct ast *expression)
+bool accept_variable(struct semantic_context *ctx, struct token tok)
 {
-	struct expr_tree *tree = convert_term(expression->children[0]);
+	// check if the symbol has been declared
+	if(tok.value.sym->type == SYMBOL_UNKNOW)
+	{
+		error_list_add(ctx->errs, error_make_semantic(tok.loc, tok.value.sym));
+		return false;
+	}
+
+	return true;
+}
+
+void instructions_add_assign(struct instr_list* instrs, struct semantic_context *ctx, struct ast* stmt)
+{
+	struct token id_tok = stmt->children[0]->value.tok;
+
+	if(accept_variable(ctx, id_tok))
+	{
+		struct expr_tree *expr = convert_expression(ctx, stmt->children[2]);
+		instr_list_add(instrs, instr_make_assign(id_tok.value.sym, expr));
+	}
+}
+
+void instructions_add_input(struct instr_list* instrs, struct semantic_context *ctx, struct ast* stmt)
+{
+	struct token id_tok = stmt->children[1]->value.tok;
+
+	if(accept_variable(ctx, id_tok))
+		instr_list_add(instrs, instr_make_input(id_tok.value.sym));
+}
+
+void instructions_add_output(struct instr_list* instrs, struct semantic_context *ctx, struct ast* stmt)
+{
+	struct expr_tree *expr = convert_expression(ctx, stmt->children[1]);
+
+	instr_list_add(instrs, instr_make_output(expr));
+}
+
+struct expr_tree *convert_expression(struct semantic_context *ctx, struct ast *expression)
+{
+	struct expr_tree *tree = convert_term(ctx, expression->children[0]);
 
 	if(expression->children_cnt > 1)
 	{
@@ -85,7 +125,7 @@ struct expr_tree *convert_expression(struct ast *expression)
 		struct expr_tree *op_tree = expr_tree_make_operator(op);
 
 		op_tree->left  = tree;
-		op_tree->right = convert_expression(expression->children[2]);
+		op_tree->right = convert_expression(ctx, expression->children[2]);
 
 		tree = op_tree;
 	}
@@ -93,9 +133,9 @@ struct expr_tree *convert_expression(struct ast *expression)
 	return tree;
 }
 
-struct expr_tree *convert_term(struct ast *term)
+struct expr_tree *convert_term(struct semantic_context *ctx, struct ast *term)
 {
-	struct expr_tree *tree = convert_factor(term->children[0]);
+	struct expr_tree *tree = convert_factor(ctx, term->children[0]);
 
 	if(term->children_cnt > 1)
 	{
@@ -103,7 +143,7 @@ struct expr_tree *convert_term(struct ast *term)
 		struct expr_tree *op_tree = expr_tree_make_operator(op);
 
 		op_tree->left  = tree;
-		op_tree->right = convert_term(term->children[2]);
+		op_tree->right = convert_term(ctx, term->children[2]);
 
 		tree = op_tree;
 	}
@@ -111,7 +151,7 @@ struct expr_tree *convert_term(struct ast *term)
 	return tree;
 }
 
-struct expr_tree *convert_factor(struct ast *factor)
+struct expr_tree *convert_factor(struct semantic_context *ctx, struct ast *factor)
 {
 	struct expr_tree *tree;
 
@@ -122,21 +162,24 @@ struct expr_tree *convert_factor(struct ast *factor)
 			break;
 
 		case TOKEN_IDENTIFIER:
-			tree = expr_tree_make_symbol(factor->children[0]->value.tok.value.sym);
+			if(accept_variable(ctx, factor->children[0]->value.tok))
+				tree = expr_tree_make_symbol(factor->children[0]->value.tok.value.sym);
+			else
+				tree = NULL;
 			break;
 
 		case TOKEN_PLUS:
 			tree = expr_tree_make_operator(OP_PLUS);
-			tree->right = convert_expression(factor->children[1]);
+			tree->right = convert_expression(ctx, factor->children[1]);
 			break;
 
 		case TOKEN_MINUS:
 			tree = expr_tree_make_operator(OP_MINUS);
-			tree->right = convert_expression(factor->children[1]);
+			tree->right = convert_expression(ctx, factor->children[1]);
 			break;
 
 		default: // case TOKEN_LPAREN:
-			tree = convert_expression(factor->children[1]);
+			tree = convert_expression(ctx, factor->children[1]);
 			break;
 	}
 

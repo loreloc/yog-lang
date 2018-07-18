@@ -28,6 +28,18 @@ struct error *error_make_syntactic(struct location loc, enum token_type actual, 
 	return new_err;
 }
 
+struct error *error_make_semantic(struct location loc, struct symbol *sym)
+{
+	struct error *new_err = ymalloc(sizeof(struct error));
+
+	new_err->next = NULL;
+	new_err->loc = loc;
+	new_err->type = ERROR_SEMANTIC;
+	new_err->info.semantic.sym = sym;
+
+	return new_err;
+}
+
 void error_list_init(struct error_list *errs)
 {
 	errs->head = NULL;
@@ -66,10 +78,15 @@ void error_list_show(struct error_list errs)
 			case ERROR_LEXICAL:
 				printf("invalid token \"%s\"\n", tmp->info.lexical.text);
 				break;
+
 			case ERROR_SYNTACTIC:
 				printf("expected token ");
 				print_expected_tokens(tmp->info.syntactic.expected);
 				printf(" but found token \"%s\"\n", token_type_str(tmp->info.syntactic.actual));
+				break;
+
+			case ERROR_SEMANTIC:
+				printf("undeclared variable \"%s\"\n", tmp->info.semantic.sym->id);
 				break;
 		}
 
