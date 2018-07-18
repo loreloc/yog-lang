@@ -3,7 +3,9 @@
 
 void analyse_variables(struct semantic_context *ctx);
 struct instr_list analyse_statements(struct semantic_context *ctx);
-struct expr_tree *convert_expression(struct ast *tree);
+struct expr_tree *convert_expression(struct ast *expression);
+struct expr_tree *convert_term(struct ast *term);
+struct expr_tree *convert_factor(struct ast *factor);
 
 void semantic_context_init(struct semantic_context *ctx, struct symbol_table *st, struct error_list *errs, struct ast *tree)
 {
@@ -23,116 +25,123 @@ struct instr_list semantic_context_analyse(struct semantic_context *ctx)
 
 void analyse_variables(struct semantic_context *ctx)
 {
-	struct ast *tmp = ctx->tree->children[1];
+	struct ast *variables = ctx->tree->children[1];
 	
-	while(tmp->children != NULL)
+	while(variables->children != NULL)
 	{
-		struct ast *var_id   = tmp->children[0];
-		struct ast *var_type = tmp->children[2];
+		struct token id_tok   = variables->children[0]->value.tok;
+		struct token type_tok = variables->children[2]->value.tok;
 
-		if(var_type->type == AST_INT)
-			var_id->value.sym->type = SYMBOL_INTEGER;
+		if(type_tok.type == TOKEN_INT)
+			id_tok.value.sym->type = SYMBOL_INTEGER;
 
-		tmp = tmp->children[4];
+		variables = variables->children[4];
 	}
 }
 
 struct instr_list analyse_statements(struct semantic_context *ctx)
 {
-	struct instr_list instrs;
-	instr_list_init(&instrs);
+	struct instr_list instructions;
+	instr_list_init(&instructions);
 
-	struct ast *tmp = ctx->tree->children[3];
+	struct ast *statements = ctx->tree->children[3];
 
-	while(tmp->children != NULL)
+	while(statements->children != NULL)
 	{
-		struct ast *stmt = tmp->children[0];
+		struct ast *stmt = statements->children[0];
 
-		switch(stmt->type)
+		switch(stmt->value.nt)
 		{
-			case AST_ASSIGN:
-				instr_list_add(&instrs,
-					instr_make_assign(stmt->children[0]->value.sym,
+			case AST_NT_ASSIGN:
+				instr_list_add(&instructions,
+					instr_make_assign(stmt->children[0]->value.tok.value.sym,
 						convert_expression(stmt->children[2])));
 				break;
 
-			case AST_INPUT:
-				instr_list_add(&instrs,
-					instr_make_input(stmt->children[1]->value.sym));
+			case AST_NT_INPUT:
+				instr_list_add(&instructions,
+					instr_make_input(stmt->children[1]->value.tok.value.sym));
 				break;
 
-			default: // case AST_OUTPUT:
-				instr_list_add(&instrs,
-					instr_make_output(
-						convert_expression(stmt->children[1])));
+			default: // case AST_NT_OUTPUT:
+				instr_list_add(&instructions,
+					instr_make_output(convert_expression(stmt->children[1])));
 				break;
 		}
 
-		tmp = tmp->children[2];
+		statements = statements->children[2];
 	}
 
-	return instrs;
+	return instructions;
 }
 
-struct expr_tree *convert_expression(struct ast *tree)
+struct expr_tree *convert_expression(struct ast *expression)
 {
-	struct expr_tree *expression;
+	struct expr_tree *tree = convert_term(expression->children[0]);
 
-	switch(tree->type)
+	for(size_t i = 1; i < expression->children_cnt; i += 2)
 	{
-		case AST_EXPRESSION:
-		case AST_TERM:
-		case AST_FACTOR:
-			expression = convert_expression(tree->children[0]);
+		enum operator op = (expression->children[i]->value.tok.type == TOKEN_PLUS) ? OP_PLUS : OP_MINUS;
+
+		struct expr_tree *op_tree = expr_tree_make_operator(op);
+
+		op_tree->left = tree;
+		op_tree->right = convert_term(expression->children[i+1]);
+
+		tree = op_tree;
+	}
+
+	return tree;
+}
+
+struct expr_tree *convert_term(struct ast *term)
+{
+	struct expr_tree *tree = convert_factor(term->children[0]);
+
+	for(size_t i = 1; i < term->children_cnt; i += 2)
+	{
+		enum operator op = (term->children[i]->value.tok.type == TOKEN_MUL) ? OP_MUL : OP_DIV;
+
+		struct expr_tree *op_tree = expr_tree_make_operator(op);
+
+		op_tree->left = tree;
+		op_tree->right = convert_factor(term->children[i+1]);
+
+		tree = op_tree;
+	}
+
+	return tree;
+}
+
+struct expr_tree *convert_factor(struct ast *factor)
+{
+	struct expr_tree *tree;
+
+	switch(factor->children[0]->value.tok.type)
+	{
+		case TOKEN_LITERAL:
+			tree = expr_tree_make_literal(factor->children[0]->value.tok.value.lit);
 			break;
 
-		case AST_PLUS:
-			expression = expr_tree_make_operator(OP_PLUS);
-			if(tree->children_cnt == 2)
-			{
-				expression->left  = convert_expression(tree->children[0]);
-				expression->right = convert_expression(tree->children[1]);
-			}
-			else // unary plus
-			{
-				expression->right = convert_expression(tree->children[0]);
-			}
+		case TOKEN_IDENTIFIER:
+			tree = expr_tree_make_symbol(factor->children[0]->value.tok.value.sym);
 			break;
 
-		case AST_MINUS:
-			expression = expr_tree_make_operator(OP_MINUS);
-			if(tree->children_cnt == 2)
-			{
-				expression->left  = convert_expression(tree->children[0]);
-				expression->right = convert_expression(tree->children[1]);
-			}
-			else // unary minus
-			{
-				expression->right = convert_expression(tree->children[0]);
-			}
+		case TOKEN_PLUS:
+			tree = expr_tree_make_operator(OP_PLUS);
+			tree->right = convert_expression(factor->children[1]);
 			break;
 
-		case AST_MUL:
-			expression = expr_tree_make_operator(OP_MUL);
-			expression->left  = convert_expression(tree->children[0]);
-			expression->right = convert_expression(tree->children[1]);
+		case TOKEN_MINUS:
+			tree = expr_tree_make_operator(OP_MINUS);
+			tree->right = convert_expression(factor->children[1]);
 			break;
 
-		case AST_DIV:
-			expression = expr_tree_make_operator(OP_DIV);
-			expression->left  = convert_expression(tree->children[0]);
-			expression->right = convert_expression(tree->children[1]);
-			break;
-
-		case AST_LITERAL:
-			expression = expr_tree_make_literal(tree->value.lit);
-			break;
-
-		default: // case AST_IDENTIFIER:
-			expression = expr_tree_make_symbol(tree->value.sym);
+		default: // case TOKEN_LPAREN:
+			tree = convert_expression(factor->children[1]);
 			break;
 	}
 
-	return expression;
+	return tree;
 }
 

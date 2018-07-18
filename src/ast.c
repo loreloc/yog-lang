@@ -1,35 +1,24 @@
 
 #include "ast.h"
 
-struct ast *ast_make(enum ast_type type)
+struct ast *ast_make_nonterminal(enum ast_nonterminal_type nt)
 {
 	struct ast *tree = ymalloc(sizeof(struct ast));
 
-	tree->type = type;
+	tree->type = AST_NONTERMINAL;
+	tree->value.nt = nt;
 	tree->children_cnt = 0;
 	tree->children = NULL;
 
 	return tree;
 }
 
-struct ast *ast_make_literal(int64_t lit)
+struct ast *ast_make_terminal(struct token tok)
 {
 	struct ast *tree = ymalloc(sizeof(struct ast));
 
-	tree->type = AST_LITERAL;
-	tree->value.lit = lit;
-	tree->children_cnt = 0;
-	tree->children = NULL;
-
-	return tree;
-}
-
-struct ast *ast_make_symbol(struct symbol *sym)
-{
-	struct ast *tree = ymalloc(sizeof(struct ast));
-
-	tree->type = AST_IDENTIFIER;
-	tree->value.sym = sym;
+	tree->type = AST_TERMINAL;
+	tree->value.tok = tok;
 	tree->children_cnt = 0;
 	tree->children = NULL;
 
@@ -50,10 +39,8 @@ void ast_clear(struct ast *tree)
 
 struct ast *ast_add_child(struct ast *tree, struct ast *child)
 {
-	size_t new_children_cnt = tree->children_cnt + 1;
-	tree->children = realloc(tree->children, new_children_cnt * sizeof(struct ast *));
-	tree->children[tree->children_cnt] = child;
-	tree->children_cnt = new_children_cnt;
+	tree->children = realloc(tree->children, (tree->children_cnt + 1) * sizeof(struct ast *));
+	tree->children[tree->children_cnt++] = child;
 
 	return child;
 }

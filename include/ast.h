@@ -3,35 +3,27 @@
 
 #pragma once
 
-#include "symtable.h"
+#include "token.h"
 
 /*! @brief The types of an abstract syntax tree node */
 enum ast_type
 {
-	AST_SOURCE,
-	AST_VARIABLES,
-	AST_STATEMENTS,
-	AST_ASSIGN,
-	AST_INPUT,
-	AST_OUTPUT,
-	AST_EXPRESSION,
-	AST_TERM,
-	AST_FACTOR,
-	AST_VAR,
-	AST_BEGIN,
-	AST_END,
-	AST_INT,
-	AST_COLON,
-	AST_SEMICOLON,
-	AST_READ,
-	AST_WRITE,
-	AST_LITERAL,
-	AST_IDENTIFIER,
-	AST_PLUS,
-	AST_MINUS,
-	AST_MUL,
-	AST_DIV,
-	AST_EQUAL
+	AST_NONTERMINAL,
+	AST_TERMINAL,
+};
+
+/*! @brief The nonterminal types of an abstract syntax tree node */
+enum ast_nonterminal_type
+{
+	AST_NT_SOURCE,
+	AST_NT_VARIABLES,
+	AST_NT_STATEMENTS,
+	AST_NT_ASSIGN,
+	AST_NT_INPUT,
+	AST_NT_OUTPUT,
+	AST_NT_EXPRESSION,
+	AST_NT_TERM,
+	AST_NT_FACTOR,
 };
 
 /*! @brief Abstract Syntax Tree data structure */
@@ -42,11 +34,11 @@ struct ast
 
 	union
 	{
-		/*! @brief The literal value of the node */
-		int64_t lit;
+		/*! @brief The nonterminal value of the node */
+		enum ast_nonterminal_type nt;
 
-		/*! @brief A pointer to a symbol value of the node */
-		struct symbol *sym;
+		/*! @brief The terminal value of the node */
+		struct token tok;
 
 	} value; /*!< @brief The value of the node */
 
@@ -58,25 +50,18 @@ struct ast
 };
 
 /**
- * @brief Make a new abstract syntax tree
- * @param type The type of the new node
+ * @brief Make a new abstract syntax tree with a nonterminal node
+ * @param nt The nonterminal value of the node
  * @return A new abstract syntax tree
  */
-struct ast *ast_make(enum ast_type type);
+struct ast *ast_make_nonterminal(enum ast_nonterminal_type nt);
 
 /**
- * @brief Make a new children of literal type
- * @param lit The literal value of the child tree to add
+ * @brief Make a new abstract syntax tree with a terminal node
+ * @param tok The terminal value of the node
  * @return A new abstract syntax tree
  */
-struct ast *ast_make_literal(int64_t lit);
-
-/**
- * @brief Add a new children of symbol pointer type
- * @param sym The symbol pointer value of the child tree to add
- * @return A new abstract syntax tree
- */
-struct ast *ast_make_symbol(struct symbol *sym);
+struct ast *ast_make_terminal(struct token tok);
 
 /**
  * @brief Add a new children to an abstract syntax tree node
