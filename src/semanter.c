@@ -5,9 +5,9 @@ void analyse_variables(struct semantic_context *ctx);
 struct instr_list analyse_statements(struct semantic_context *ctx);
 
 bool accept_variable(struct semantic_context *ctx, struct token tok);
-void instructions_add_assign(struct instr_list* instrs, struct semantic_context *ctx, struct ast* stmt);
-void instructions_add_input(struct instr_list* instrs, struct semantic_context *ctx, struct ast* stmt);
-void instructions_add_output(struct instr_list* instrs, struct semantic_context *ctx, struct ast* stmt);
+void instructions_add_assign(struct instr_list *instrs, struct semantic_context *ctx, struct ast *stmt);
+void instructions_add_input(struct instr_list *instrs, struct semantic_context *ctx, struct ast *stmt);
+void instructions_add_output(struct instr_list *instrs, struct semantic_context *ctx, struct ast *stmt);
 
 struct expr_tree *convert_expression(struct semantic_context *ctx, struct ast *expression);
 struct expr_tree *convert_term(struct semantic_context *ctx, struct ast *term);
@@ -89,7 +89,7 @@ bool accept_variable(struct semantic_context *ctx, struct token tok)
 	return true;
 }
 
-void instructions_add_assign(struct instr_list* instrs, struct semantic_context *ctx, struct ast* stmt)
+void instructions_add_assign(struct instr_list *instrs, struct semantic_context *ctx, struct ast *stmt)
 {
 	struct token id_tok = stmt->children[0]->value.tok;
 
@@ -100,7 +100,7 @@ void instructions_add_assign(struct instr_list* instrs, struct semantic_context 
 	}
 }
 
-void instructions_add_input(struct instr_list* instrs, struct semantic_context *ctx, struct ast* stmt)
+void instructions_add_input(struct instr_list *instrs, struct semantic_context *ctx, struct ast *stmt)
 {
 	struct token id_tok = stmt->children[1]->value.tok;
 
@@ -108,7 +108,7 @@ void instructions_add_input(struct instr_list* instrs, struct semantic_context *
 		instr_list_add(instrs, instr_make_input(id_tok.value.sym));
 }
 
-void instructions_add_output(struct instr_list* instrs, struct semantic_context *ctx, struct ast* stmt)
+void instructions_add_output(struct instr_list *instrs, struct semantic_context *ctx, struct ast *stmt)
 {
 	struct expr_tree *expr = convert_expression(ctx, stmt->children[1]);
 
