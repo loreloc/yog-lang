@@ -79,14 +79,13 @@ struct expr_tree *convert_expression(struct ast *expression)
 {
 	struct expr_tree *tree = convert_term(expression->children[0]);
 
-	for(size_t i = 1; i < expression->children_cnt; i += 2)
+	if(expression->children_cnt > 1)
 	{
-		enum operator op = (expression->children[i]->value.tok.type == TOKEN_PLUS) ? OP_PLUS : OP_MINUS;
-
+		enum operator op = (expression->children[1]->value.tok.type == TOKEN_PLUS) ? OP_PLUS : OP_MINUS;
 		struct expr_tree *op_tree = expr_tree_make_operator(op);
 
-		op_tree->left = tree;
-		op_tree->right = convert_term(expression->children[i+1]);
+		op_tree->left  = tree;
+		op_tree->right = convert_expression(expression->children[2]);
 
 		tree = op_tree;
 	}
@@ -98,14 +97,13 @@ struct expr_tree *convert_term(struct ast *term)
 {
 	struct expr_tree *tree = convert_factor(term->children[0]);
 
-	for(size_t i = 1; i < term->children_cnt; i += 2)
+	if(term->children_cnt > 1)
 	{
-		enum operator op = (term->children[i]->value.tok.type == TOKEN_MUL) ? OP_MUL : OP_DIV;
-
+		enum operator op = (term->children[1]->value.tok.type == TOKEN_MUL) ? OP_MUL : OP_DIV;
 		struct expr_tree *op_tree = expr_tree_make_operator(op);
 
-		op_tree->left = tree;
-		op_tree->right = convert_factor(term->children[i+1]);
+		op_tree->left  = tree;
+		op_tree->right = convert_term(term->children[2]);
 
 		tree = op_tree;
 	}

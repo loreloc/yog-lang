@@ -54,9 +54,9 @@ void parse_context_init(struct parse_context *ctx, FILE *source, struct symbol_t
  * 
  * <output> ::= "write" <expression>
  * 
- * <expression> ::= <term> | <term> "+" <term> | <term> "-" <term>
+ * <expression> ::= <term> | <term> "+" <expression> | <term> "-" <expression>
  * 
- * <term> ::= <factor> | <factor> "*" <factor> | <factor> "/" <factor>
+ * <term> ::= <factor> | <factor> "*" <term> | <factor> "/" <term>
  * 
  * <factor> ::=   "literal" | "identifier"
  *              | "+" <expression> | "-" <expression>

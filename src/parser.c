@@ -176,10 +176,10 @@ struct ast *parse_expression(struct parse_context *ctx)
 	struct ast *tree = ast_make_nonterminal(AST_NT_EXPRESSION);
 	ast_add_child(tree, parse_term(ctx));
 
-	while(accept_token(ctx, TOKEN_PLUS | TOKEN_MINUS))
+	if(accept_token(ctx, TOKEN_PLUS | TOKEN_MINUS))
 	{
 		ast_add_child(tree, ast_make_terminal(ctx->prev_tok));
-		ast_add_child(tree, parse_term(ctx));
+		ast_add_child(tree, parse_expression(ctx));
 	}
 
 	return tree;
@@ -190,10 +190,10 @@ struct ast *parse_term(struct parse_context *ctx)
 	struct ast *tree = ast_make_nonterminal(AST_NT_TERM);
 	ast_add_child(tree, parse_factor(ctx));
 
-	while(accept_token(ctx, TOKEN_MUL | TOKEN_DIV))
+	if(accept_token(ctx, TOKEN_MUL | TOKEN_DIV))
 	{
 		ast_add_child(tree, ast_make_terminal(ctx->prev_tok));
-		ast_add_child(tree, parse_factor(ctx));
+		ast_add_child(tree, parse_term(ctx));
 	}
 
 	return tree;
