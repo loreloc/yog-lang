@@ -5,7 +5,6 @@
 
 #include "ast.h"
 #include "error.h"
-#include "symtable.h"
 #include "instruction.h"
 
 /*! @brief The semantic context data structure */

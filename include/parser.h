@@ -12,9 +12,6 @@ struct parse_context
 	/*! @brief The lexical context */
 	struct lex_context lex_ctx;
 
-	/*! @brief A pointer to the symbol table */
-	struct symbol_table *st;
-
 	/*! @brief A pointer to the error list */
 	struct error_list *errs;
 

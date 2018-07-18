@@ -5,6 +5,7 @@ void next_token(struct parse_context *ctx);
 bool check_token(struct parse_context *ctx, enum token_type types);
 bool accept_token(struct parse_context *ctx, enum token_type types);
 bool expect_token(struct parse_context *ctx, enum token_type types);
+
 struct ast *parse_source(struct parse_context *ctx);
 struct ast *parse_variables(struct parse_context *ctx);
 struct ast *parse_statements(struct parse_context *ctx);
@@ -17,7 +18,6 @@ void parse_context_init(struct parse_context *ctx, FILE *source, struct symbol_t
 	// initialize the lexical context
 	lex_context_init(&ctx->lex_ctx, source, st, errs);
 
-	ctx->st = st;
 	ctx->errs = errs;
 }
 

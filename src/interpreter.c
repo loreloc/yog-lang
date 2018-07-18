@@ -18,10 +18,12 @@ void interpreter_execute(struct interpreter *vm)
 			case INSTR_ASSIGN:
 				ir.sym->value = expr_tree_eval(ir.tree);
 				break;
+
 			case INSTR_INPUT:
 				printf("enter the value of %s : ", ir.sym->id);
 				scanf("%ld", &ir.sym->value);
 				break;
+
 			default: // case INSTR_OUTPUT:
 				printf("%ld\n", expr_tree_eval(ir.tree));
 				break;
