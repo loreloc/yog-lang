@@ -88,21 +88,29 @@ struct ast *parse_variables(struct parse_context *ctx)
 
 	while(true)
 	{
-		if(!accept_token(ctx, TOKEN_IDENTIFIER))
+		if(check_token(ctx, TOKEN_BEGIN | TOKEN_EOF))
 			break;
 
-		ast_add_child(subtree, ast_make_terminal(ctx->prev_tok));
-
-		if(expect_token(ctx, TOKEN_COLON))
+		if(accept_token(ctx, TOKEN_IDENTIFIER))
+		{
 			ast_add_child(subtree, ast_make_terminal(ctx->prev_tok));
 
-		if(expect_token(ctx, TOKEN_INT))
-			ast_add_child(subtree, ast_make_terminal(ctx->prev_tok));
+			if(expect_token(ctx, TOKEN_COLON))
+				ast_add_child(subtree, ast_make_terminal(ctx->prev_tok));
 
-		if(expect_token(ctx, TOKEN_SEMICOLON))
-			ast_add_child(subtree, ast_make_terminal(ctx->prev_tok));
+			if(expect_token(ctx, TOKEN_INT))
+				ast_add_child(subtree, ast_make_terminal(ctx->prev_tok));
 
-		subtree = ast_add_child(subtree, ast_make_nonterminal(AST_NT_VARIABLES));
+			if(expect_token(ctx, TOKEN_SEMICOLON))
+				ast_add_child(subtree, ast_make_terminal(ctx->prev_tok));
+
+			subtree = ast_add_child(subtree, ast_make_nonterminal(AST_NT_VARIABLES));
+		}
+		else
+		{
+			error_list_add(ctx->errs, error_make_syntactic(ctx->curr_tok.loc, ctx->curr_tok.type, TOKEN_IDENTIFIER));
+			next_token(ctx);
+		}
 	}
 
 	return tree;
