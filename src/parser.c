@@ -130,40 +130,33 @@ struct ast *parse_statements(struct parse_context *ctx)
 
 		if(accept_token(ctx, TOKEN_IDENTIFIER))
 		{
-			struct token id_tok = ctx->prev_tok;
+			stmt_tree = ast_make_nonterminal(AST_NT_ASSIGN);
+			ast_add_child(stmt_tree, ast_make_terminal(ctx->prev_tok));
 
 			if(expect_token(ctx, TOKEN_EQUAL))
-			{
-				stmt_tree = ast_make_nonterminal(AST_NT_ASSIGN);
-				ast_add_child(stmt_tree, ast_make_terminal(id_tok));
 				ast_add_child(stmt_tree, ast_make_terminal(ctx->prev_tok));
-				ast_add_child(stmt_tree, parse_expression(ctx));
-			}
+
+			ast_add_child(stmt_tree, parse_expression(ctx));
 		}
 		else if(accept_token(ctx, TOKEN_READ))
 		{
-			struct token read_tok = ctx->prev_tok;
+			stmt_tree = ast_make_nonterminal(AST_NT_INPUT);
+			ast_add_child(stmt_tree, ast_make_terminal(ctx->prev_tok));
 
 			if(expect_token(ctx, TOKEN_IDENTIFIER))
-			{
-				struct token id_tok = ctx->prev_tok;
-
-				stmt_tree = ast_make_nonterminal(AST_NT_INPUT);
-				ast_add_child(stmt_tree, ast_make_terminal(read_tok));
-				ast_add_child(stmt_tree, ast_make_terminal(id_tok));
-			}
+				ast_add_child(stmt_tree, ast_make_terminal(ctx->prev_tok));
 		}
 		else if(accept_token(ctx, TOKEN_WRITE))
 		{
-			struct token write_tok = ctx->prev_tok;
-
 			stmt_tree = ast_make_nonterminal(AST_NT_OUTPUT);
-			ast_add_child(stmt_tree, ast_make_terminal(write_tok));
+			ast_add_child(stmt_tree, ast_make_terminal(ctx->prev_tok));
 			ast_add_child(stmt_tree, parse_expression(ctx));
 		}
 		else
 		{
-			error_list_add(ctx->errs, error_make_syntactic(ctx->curr_tok.loc, ctx->curr_tok.type, TOKEN_IDENTIFIER | TOKEN_READ | TOKEN_WRITE));
+			error_list_add(ctx->errs, error_make_syntactic(ctx->curr_tok.loc, ctx->curr_tok.type,
+				TOKEN_IDENTIFIER | TOKEN_READ | TOKEN_WRITE));
+
 			next_token(ctx);
 			continue;
 		}
