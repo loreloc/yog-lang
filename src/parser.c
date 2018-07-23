@@ -230,7 +230,9 @@ struct ast *parse_factor(struct parse_context *ctx)
 	}
 	else
 	{
-		error_list_add(ctx->errs, error_make_syntactic(ctx->curr_tok.loc, ctx->curr_tok.type, TOKEN_LITERAL | TOKEN_IDENTIFIER));
+		error_list_add(ctx->errs, error_make_syntactic(ctx->curr_tok.loc, ctx->curr_tok.type,
+			TOKEN_LITERAL | TOKEN_IDENTIFIER | TOKEN_PLUS | TOKEN_MINUS | TOKEN_LPAREN));
+
 		next_token(ctx);
 
 		ast_add_child(tree, NULL);
