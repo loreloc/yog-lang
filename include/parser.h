@@ -41,11 +41,11 @@ void parse_context_init(struct parse_context *ctx, FILE *source, struct symbol_t
  * 
  * <variables> ::= "identifier" ":" "int" ";" <variables> | ""
  * 
- * <statements> ::=   <assignment> ";" <statements> | ""
- *                  | <input>      ";" <statements> | ""
- *                  | <output>     ";" <statements> | ""
+ * <statements> ::=   <assign> ";" <statements> | ""
+ *                  | <input>  ";" <statements> | ""
+ *                  | <output> ";" <statements> | ""
  * 
- * <assignment> ::= "identifier" "=" <expression>
+ * <assign> ::= "identifier" "=" <expression>
  * 
  * <input> ::= "read" "identifier"
  * 

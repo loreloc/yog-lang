@@ -9,6 +9,9 @@ bool expect_token(struct parse_context *ctx, enum token_type types);
 struct ast *parse_source(struct parse_context *ctx);
 struct ast *parse_variables(struct parse_context *ctx);
 struct ast *parse_statements(struct parse_context *ctx);
+struct ast *parse_assign(struct parse_context *ctx);
+struct ast *parse_input(struct parse_context *ctx);
+struct ast *parse_output(struct parse_context *ctx);
 struct ast *parse_expression(struct parse_context *ctx);
 struct ast *parse_term(struct parse_context *ctx);
 struct ast *parse_factor(struct parse_context *ctx);
@@ -31,6 +34,7 @@ struct ast *parse(struct parse_context *ctx)
 
 void next_token(struct parse_context *ctx)
 {
+	// save the current token and get the next token
 	ctx->prev_tok = ctx->curr_tok;
 	ctx->curr_tok = lex(&ctx->lex_ctx);
 }
@@ -67,14 +71,14 @@ struct ast *parse_source(struct parse_context *ctx)
 
 	if(expect_token(ctx, TOKEN_VAR))
 		ast_add_child(tree, ast_make_terminal(ctx->prev_tok));
-	
+
 	ast_add_child(tree, parse_variables(ctx));
 
 	if(expect_token(ctx, TOKEN_BEGIN))
 		ast_add_child(tree, ast_make_terminal(ctx->prev_tok));
 
 	ast_add_child(tree, parse_statements(ctx));
-	
+
 	if(expect_token(ctx, TOKEN_END))
 		ast_add_child(tree, ast_make_terminal(ctx->prev_tok));
 
@@ -83,74 +87,67 @@ struct ast *parse_source(struct parse_context *ctx)
 
 struct ast *parse_variables(struct parse_context *ctx)
 {
+	bool parsing = true;
 	struct ast *tree = ast_make_nonterminal(AST_NT_VARIABLES);
-	struct ast *subtree = tree;
 
-	while(true)
+	while(parsing)
 	{
-		if(check_token(ctx, TOKEN_BEGIN | TOKEN_EOF))
-			break;
+		if(check_token(ctx, TOKEN_EOF | TOKEN_BEGIN))
+			return tree;
 
 		if(accept_token(ctx, TOKEN_IDENTIFIER))
 		{
-			ast_add_child(subtree, ast_make_terminal(ctx->prev_tok));
+			ast_add_child(tree, ast_make_terminal(ctx->prev_tok));
 
 			if(expect_token(ctx, TOKEN_COLON))
-				ast_add_child(subtree, ast_make_terminal(ctx->prev_tok));
+				ast_add_child(tree, ast_make_terminal(ctx->prev_tok));
 
 			if(expect_token(ctx, TOKEN_INT))
-				ast_add_child(subtree, ast_make_terminal(ctx->prev_tok));
+				ast_add_child(tree, ast_make_terminal(ctx->prev_tok));
 
 			if(expect_token(ctx, TOKEN_SEMICOLON))
-				ast_add_child(subtree, ast_make_terminal(ctx->prev_tok));
+				ast_add_child(tree, ast_make_terminal(ctx->prev_tok));
 
-			subtree = ast_add_child(subtree, ast_make_nonterminal(AST_NT_VARIABLES));
+			parsing = false;
 		}
 		else
 		{
-			error_list_add(ctx->errs, error_make_syntactic(ctx->curr_tok.loc, ctx->curr_tok.type, TOKEN_IDENTIFIER));
+			error_list_add(ctx->errs, error_make_syntactic(ctx->curr_tok.loc, ctx->curr_tok.type,
+				TOKEN_IDENTIFIER));
+
 			next_token(ctx);
 		}
 	}
+
+	ast_add_child(tree, parse_variables(ctx));
 
 	return tree;
 }
 
 struct ast *parse_statements(struct parse_context *ctx)
 {
+	bool parsing = true;
 	struct ast *tree = ast_make_nonterminal(AST_NT_STATEMENTS);
-	struct ast *subtree = tree;
 
-	while(true)
+	while(parsing)
 	{
-		if(check_token(ctx, TOKEN_END | TOKEN_EOF))
-			break;
+		if(check_token(ctx, TOKEN_EOF | TOKEN_END))
+			return tree;
 
-		struct ast *stmt_tree;
-
-		if(accept_token(ctx, TOKEN_IDENTIFIER))
+		if(check_token(ctx, TOKEN_IDENTIFIER))
 		{
-			stmt_tree = ast_make_nonterminal(AST_NT_ASSIGN);
-			ast_add_child(stmt_tree, ast_make_terminal(ctx->prev_tok));
-
-			if(expect_token(ctx, TOKEN_EQUAL))
-				ast_add_child(stmt_tree, ast_make_terminal(ctx->prev_tok));
-
-			ast_add_child(stmt_tree, parse_expression(ctx));
+			ast_add_child(tree, parse_assign(ctx));
+			parsing = false;
 		}
-		else if(accept_token(ctx, TOKEN_READ))
+		else if(check_token(ctx, TOKEN_READ))
 		{
-			stmt_tree = ast_make_nonterminal(AST_NT_INPUT);
-			ast_add_child(stmt_tree, ast_make_terminal(ctx->prev_tok));
-
-			if(expect_token(ctx, TOKEN_IDENTIFIER))
-				ast_add_child(stmt_tree, ast_make_terminal(ctx->prev_tok));
+			ast_add_child(tree, parse_input(ctx));
+			parsing = false;
 		}
-		else if(accept_token(ctx, TOKEN_WRITE))
+		else if(check_token(ctx, TOKEN_WRITE))
 		{
-			stmt_tree = ast_make_nonterminal(AST_NT_OUTPUT);
-			ast_add_child(stmt_tree, ast_make_terminal(ctx->prev_tok));
-			ast_add_child(stmt_tree, parse_expression(ctx));
+			ast_add_child(tree, parse_output(ctx));
+			parsing = false;
 		}
 		else
 		{
@@ -158,16 +155,53 @@ struct ast *parse_statements(struct parse_context *ctx)
 				TOKEN_IDENTIFIER | TOKEN_READ | TOKEN_WRITE));
 
 			next_token(ctx);
-			continue;
 		}
-
-		ast_add_child(subtree, stmt_tree);
-
-		if(expect_token(ctx, TOKEN_SEMICOLON))
-			ast_add_child(subtree, ast_make_terminal(ctx->prev_tok));
-
-		subtree = ast_add_child(subtree, ast_make_nonterminal(AST_NT_STATEMENTS));
 	}
+
+	if(expect_token(ctx, TOKEN_SEMICOLON))
+		ast_add_child(tree, ast_make_terminal(ctx->prev_tok));
+
+	ast_add_child(tree, parse_statements(ctx));
+
+	return tree;
+}
+
+struct ast *parse_assign(struct parse_context *ctx)
+{
+	struct ast *tree = ast_make_nonterminal(AST_NT_ASSIGN);
+
+	if(expect_token(ctx, TOKEN_IDENTIFIER))
+		ast_add_child(tree, ast_make_terminal(ctx->prev_tok));
+
+	if(expect_token(ctx, TOKEN_EQUAL))
+		ast_add_child(tree, ast_make_terminal(ctx->prev_tok));
+
+	ast_add_child(tree, parse_expression(ctx));
+
+	return tree;
+}
+
+struct ast *parse_input(struct parse_context *ctx)
+{
+	struct ast *tree = ast_make_nonterminal(AST_NT_INPUT);
+
+	if(expect_token(ctx, TOKEN_READ))
+		ast_add_child(tree, ast_make_terminal(ctx->prev_tok));
+
+	if(expect_token(ctx, TOKEN_IDENTIFIER))
+		ast_add_child(tree, ast_make_terminal(ctx->prev_tok));
+
+	return tree;
+}
+
+struct ast *parse_output(struct parse_context *ctx)
+{
+	struct ast *tree = ast_make_nonterminal(AST_NT_OUTPUT);
+
+	if(expect_token(ctx, TOKEN_WRITE))
+		ast_add_child(tree, ast_make_terminal(ctx->prev_tok));
+
+	ast_add_child(tree, parse_expression(ctx));
 
 	return tree;
 }
