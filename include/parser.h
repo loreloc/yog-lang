@@ -35,29 +35,29 @@ void parse_context_init(struct parse_context *ctx, FILE *source, struct symbol_t
  * @brief Parse the source code
  * @see https://en.wikipedia.org/wiki/Recursive_descent_parser
  * 
- * Descendent recursive LL(1) parser for the following grammar
+ * LL(1) parser for the following grammar (EBNF syntax)
  * ```
- * <source> ::= "var" <variables> "begin" <statements> "end"
+ * source = "var" variables "begin" statements "end"
  * 
- * <variables> ::= "identifier" ":" "int" ";" <variables> | ""
+ * variables = { "identifier" ":" "int" ";" }
  * 
- * <statements> ::=   <assign> ";" <statements> | ""
- *                  | <input>  ";" <statements> | ""
- *                  | <output> ";" <statements> | ""
+ * statements = { [ assign | input | output ] ";" }
  * 
- * <assign> ::= "identifier" "=" <expression>
+ * assign = "identifier" "=" expression
  * 
- * <input> ::= "read" "identifier"
+ * input = "read" "identifier"
  * 
- * <output> ::= "write" <expression>
+ * output = "write" expression
  * 
- * <expression> ::= <term> | <term> "+" <expression> | <term> "-" <expression>
+ * expression = term { ( "+" | "-" ) term }
  * 
- * <term> ::= <factor> | <factor> "*" <term> | <factor> "/" <term>
+ * term = factor { ( "*" | "/" ) factor }
  * 
- * <factor> ::=   "literal" | "identifier"
- *              | "+" <expression> | "-" <expression>
- *              | "(" <expression> ")"
+ * factor =   "literal"
+ *          | "identifier"
+ *          | "+" <expression>
+ *          | "-" <expression>
+ *          | "(" <expression> ")"
  * ```
  * @param ctx A pointer to the parse context
  * @return The abstract syntax tree of the source code
