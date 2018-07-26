@@ -4,8 +4,6 @@
 #pragma once
 
 #include <stdint.h>
-#include <string.h>
-#include <stdbool.h>
 #include "defines.h"
 #include "common.h"
 

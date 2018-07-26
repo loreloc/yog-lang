@@ -1,5 +1,15 @@
 
+#include <assert.h>
 #include "common.h"
+
+void yassert_fail(bool val, const char *msg, const char *file, size_t line)
+{
+	if(val == false)
+	{
+		fprintf(stderr, "assertion failed: %s in %s at %lu\n", msg, file, line);
+		exit(~0);
+	}
+}
 
 void *ymalloc(size_t size)
 {
@@ -7,11 +17,8 @@ void *ymalloc(size_t size)
 		size = 1;
 
 	void *ptr = malloc(size);
-	if(ptr == NULL)
-	{
-		fputs("memory allocation failed\n", stderr);
-		exit(~0x0);
-	}
+
+	yassert(ptr != NULL, "memory allocation failed");
 
 	return ptr;
 }
@@ -22,11 +29,8 @@ void *ycalloc(size_t num, size_t size)
 		size = 1;
 	
 	void *ptr = calloc(num, size);
-	if(ptr == NULL)
-	{
-		fputs("memory allocation failed\n", stderr);
-		exit(~0x0);
-	}
+	
+	yassert(ptr != NULL, "zero-initialized memory allocation failed");
 
 	return ptr;
 }
@@ -37,11 +41,8 @@ void *yrealloc(void *ptr, size_t size)
 		size = 1;
 
 	ptr = realloc(ptr, size);
-	if(ptr == NULL)
-	{
-		fputs("memory reallocation failed\n", stderr);
-		exit(~0x0);
-	}
+	
+	yassert(ptr != NULL, "memory reallocation failed");
 
 	return ptr;
 }
@@ -55,6 +56,8 @@ void yfree(void *ptr)
 char *ystrdup(char *str)
 {
 	char *ptr = ymalloc(strlen(str) + 1);
+
+	yassert(ptr != NULL, "string duplication failed");
 
 	strcpy(ptr, str);
 

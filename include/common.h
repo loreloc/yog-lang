@@ -6,6 +6,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+
+/*! @brief Custom assert macro */
+#define yassert(val, msg) yassert_fail(val, msg, __FILE__, __LINE__)
+
+/**
+ * @brief Custom assert function
+ * @param val The boolean value to check
+ * @param msg The error message to print
+ * @param file The file where the check failed
+ * @param line The line number where the check failed
+ */
+void yassert_fail(bool val, const char *msg, const char *file, size_t line);
 
 /**
  * @brief Custom succeed-or-die memory allocation function

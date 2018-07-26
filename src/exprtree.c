@@ -71,6 +71,7 @@ int64_t expr_tree_evaluate(struct expr_tree *tree)
 			return lval * rval;
 
 		default: // case OP_DIV:
+			yassert(rval != 0, "division by zero");
 			return lval / rval;
 	}
 }
