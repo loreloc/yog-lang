@@ -3,36 +3,36 @@
 
 struct instr *instr_make_assign(struct symbol *sym, struct expr_tree *tree)
 {
-	struct instr *new_instr = ymalloc(sizeof(struct instr));
+	struct instr *instr = ymalloc(sizeof(struct instr));
 
-	new_instr->next = NULL;
-	new_instr->type = INSTR_ASSIGN;
-	new_instr->sym = sym;
-	new_instr->tree = tree;
+	instr->next = NULL;
+	instr->type = INSTR_ASSIGN;
+	instr->sym = sym;
+	instr->tree = tree;
 
-	return new_instr;
+	return instr;
 }
 
 struct instr *instr_make_input(struct symbol *sym)
 {
-	struct instr *new_instr = ymalloc(sizeof(struct instr));
+	struct instr *instr = ymalloc(sizeof(struct instr));
 
-	new_instr->next = NULL;
-	new_instr->type = INSTR_INPUT;
-	new_instr->sym = sym;
+	instr->next = NULL;
+	instr->type = INSTR_INPUT;
+	instr->sym = sym;
 
-	return new_instr;
+	return instr;
 }
 
 struct instr *instr_make_output(struct expr_tree *tree)
 {
-	struct instr *new_instr = ymalloc(sizeof(struct instr));
+	struct instr *instr = ymalloc(sizeof(struct instr));
 
-	new_instr->next = NULL;
-	new_instr->type = INSTR_OUTPUT;
-	new_instr->tree = tree;
+	instr->next = NULL;
+	instr->type = INSTR_OUTPUT;
+	instr->tree = tree;
 
-	return new_instr;
+	return instr;
 }
 
 void instr_list_init(struct instr_list *instrs)
@@ -53,7 +53,7 @@ void instr_list_clear(struct instr_list *instrs)
 			expr_tree_clear(tmp->tree);
 
 		instrs->head = tmp->next;
-		free(tmp);
+		yfree(tmp);
 	}
 
 	instrs->tail = NULL;

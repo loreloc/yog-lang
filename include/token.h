@@ -48,8 +48,7 @@ struct token
 
 		/*! @brief A pointer to a symbol value */
 		struct symbol *sym;
-
-	} value; /*!< @brief The value of the token */
+	};
 };
 
 /**

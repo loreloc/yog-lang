@@ -77,5 +77,5 @@ void expr_tree_clear(struct expr_tree *tree);
  * @param tree A pointer to the expression tree to evaluate
  * @return The value of the expression
  */
-int64_t expr_tree_eval(struct expr_tree *tree);
+int64_t expr_tree_evaluate(struct expr_tree *tree);
 

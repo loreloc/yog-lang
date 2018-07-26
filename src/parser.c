@@ -4,7 +4,9 @@
 void next_token(struct parse_context *ctx);
 bool check_token(struct parse_context *ctx, enum token_type types);
 bool accept_token(struct parse_context *ctx, struct ast *tree, enum token_type types);
-bool expect_token(struct parse_context *ctx, struct ast* tree, enum token_type type);
+void report_error(struct parse_context *ctx, enum token_type expected);
+void replace_token(struct parse_context *ctx, struct ast *tree, enum token_type type, enum token_type expected);
+bool expect_token(struct parse_context *ctx, struct ast *tree, enum token_type type);
 
 struct ast *parse_source(struct parse_context *ctx);
 struct ast *parse_variables(struct parse_context *ctx);
@@ -58,23 +60,35 @@ bool accept_token(struct parse_context *ctx, struct ast *tree, enum token_type t
 	return false;
 }
 
-bool expect_token(struct parse_context *ctx, struct ast* tree, enum token_type type)
+void report_error(struct parse_context *ctx, enum token_type expected)
+{
+	// add a new syntactic error to the error list
+	error_list_add(ctx->errs, error_make_syntactic(ctx->curr_tok.loc, ctx->curr_tok.type, expected));
+}
+
+void replace_token(struct parse_context *ctx, struct ast *tree, enum token_type type, enum token_type expected)
+{
+	// initialize the error recovering token
+	struct token tok;
+	tok.loc = ctx->curr_tok.loc;
+	tok.type = type;
+	tok.sym = NULL;
+
+	// add the error recovering token as a child to the abstract syntax tree node
+	ast_add_child(tree, ast_make_terminal(tok));
+
+	// report the error
+	report_error(ctx, expected);
+}
+
+bool expect_token(struct parse_context *ctx, struct ast *tree, enum token_type type)
 {
 	// check if the token type is equal to type
 	if(accept_token(ctx, tree, type))
 		return true;
 	
-	// initialize an error recovering token
-	struct token tok;
-	tok.loc = ctx->curr_tok.loc;
-	tok.type = type;
-	tok.value.sym = NULL;
-
-	// add the error recovering token as a child to the abstract syntax tree node
-	ast_add_child(tree, ast_make_terminal(tok));
-
-	// add a new syntactic error to the error list
-	error_list_add(ctx->errs, error_make_syntactic(ctx->curr_tok.loc, ctx->curr_tok.type, type));
+	// replace the token with the expected token and report the syntax error
+	replace_token(ctx, tree, type, type);
 
 	return false;
 }
@@ -106,9 +120,7 @@ struct ast *parse_variables(struct parse_context *ctx)
 		}
 		else
 		{
-			error_list_add(ctx->errs, error_make_syntactic(ctx->curr_tok.loc, ctx->curr_tok.type,
-				TOKEN_IDENTIFIER));
-
+			report_error(ctx, TOKEN_IDENTIFIER);
 			next_token(ctx);
 		}
 	}
@@ -140,9 +152,7 @@ struct ast *parse_statements(struct parse_context *ctx)
 		}
 		else
 		{
-			error_list_add(ctx->errs, error_make_syntactic(ctx->curr_tok.loc, ctx->curr_tok.type,
-				TOKEN_IDENTIFIER | TOKEN_READ | TOKEN_WRITE));
-
+			report_error(ctx, TOKEN_IDENTIFIER | TOKEN_READ | TOKEN_WRITE);
 			next_token(ctx);
 			continue;
 		}
@@ -226,16 +236,8 @@ struct ast *parse_factor(struct parse_context *ctx)
 	}
 	else
 	{
-		struct token tok;
-		tok.loc = ctx->curr_tok.loc;
-		tok.type = TOKEN_LITERAL;
-		tok.value.lit = 0;
-
-		ast_add_child(tree, ast_make_terminal(tok));
-
-		error_list_add(ctx->errs, error_make_syntactic(ctx->curr_tok.loc, ctx->curr_tok.type,
-			TOKEN_LITERAL | TOKEN_IDENTIFIER | TOKEN_PLUS | TOKEN_MINUS | TOKEN_LPAREN));
-
+		replace_token(ctx, tree, TOKEN_LITERAL,
+			TOKEN_LITERAL | TOKEN_IDENTIFIER | TOKEN_PLUS | TOKEN_MINUS | TOKEN_LPAREN);
 		next_token(ctx);
 	}
 

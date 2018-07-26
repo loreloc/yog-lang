@@ -16,7 +16,7 @@ void interpreter_execute(struct interpreter *vm)
 		switch(ir.type)
 		{
 			case INSTR_ASSIGN:
-				ir.sym->value = expr_tree_eval(ir.tree);
+				ir.sym->value = expr_tree_evaluate(ir.tree);
 				break;
 
 			case INSTR_INPUT:
@@ -25,7 +25,7 @@ void interpreter_execute(struct interpreter *vm)
 				break;
 
 			default: // case INSTR_OUTPUT:
-				printf("%ld\n", expr_tree_eval(ir.tree));
+				printf("%ld\n", expr_tree_evaluate(ir.tree));
 				break;
 		}
 

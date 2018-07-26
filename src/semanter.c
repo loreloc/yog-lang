@@ -33,9 +33,9 @@ struct instr_list semantic_context_analyse(struct semantic_context *ctx)
 bool accept_variable(struct semantic_context *ctx, struct token tok)
 {
 	// check if the symbol has been declared
-	if(tok.value.sym->type == SYMBOL_UNKNOW)
+	if(tok.sym->type == SYMBOL_UNKNOW)
 	{
-		error_list_add(ctx->errs, error_make_semantic(tok.loc, tok.value.sym));
+		error_list_add(ctx->errs, error_make_semantic(tok.loc, tok.sym));
 		return false;
 	}
 
@@ -48,11 +48,11 @@ void analyse_variables(struct semantic_context *ctx)
 
 	for(size_t i = 0; i < variables->children_cnt; i += 4)
 	{
-		struct token id_tok   = variables->children[i  ]->value.tok;
-		struct token type_tok = variables->children[i+2]->value.tok;
+		struct token id_tok   = variables->children[i  ]->tok;
+		struct token type_tok = variables->children[i+2]->tok;
 
-		if(id_tok.value.sym != NULL && type_tok.type == TOKEN_INT)
-			id_tok.value.sym->type = SYMBOL_INTEGER;
+		if(id_tok.sym != NULL && type_tok.type == TOKEN_INT)
+			id_tok.sym->type = SYMBOL_INTEGER;
 	}
 }
 
@@ -70,7 +70,7 @@ struct instr_list analyse_statements(struct semantic_context *ctx)
 		// make sure that the statement node is a nonterminal
 		if(statement->type == AST_NONTERMINAL)
 		{
-			switch(statement->value.nt)
+			switch(statement->nt)
 			{
 				case AST_NT_ASSIGN:
 					instructions_add_assign(&instrs, ctx, statement);
@@ -99,27 +99,27 @@ struct instr_list analyse_statements(struct semantic_context *ctx)
 
 void instructions_add_assign(struct instr_list *instrs, struct semantic_context *ctx, struct ast *stmt)
 {
-	struct token id_tok = stmt->children[0]->value.tok;
+	struct token id_tok = stmt->children[0]->tok;
 
-	if(id_tok.value.sym != NULL)
+	if(id_tok.sym != NULL)
 	{
 		if(accept_variable(ctx, id_tok))
 		{
 			struct expr_tree *expr = convert_expression(ctx, stmt->children[2]);
 
-			instr_list_add(instrs, instr_make_assign(id_tok.value.sym, expr));
+			instr_list_add(instrs, instr_make_assign(id_tok.sym, expr));
 		}
 	}
 }
 
 void instructions_add_input(struct instr_list *instrs, struct semantic_context *ctx, struct ast *stmt)
 {
-	struct token id_tok = stmt->children[1]->value.tok;
+	struct token id_tok = stmt->children[1]->tok;
 
-	if(id_tok.value.sym != NULL)
+	if(id_tok.sym != NULL)
 	{
 		if(accept_variable(ctx, id_tok))
-			instr_list_add(instrs, instr_make_input(id_tok.value.sym));
+			instr_list_add(instrs, instr_make_input(id_tok.sym));
 	}
 }
 
@@ -136,7 +136,7 @@ struct expr_tree *convert_expression(struct semantic_context *ctx, struct ast *e
 
 	for(size_t i = 1; i < expression->children_cnt; i += 2)
 	{
-		enum operator op = (expression->children[i]->value.tok.type == TOKEN_PLUS) ? OP_PLUS : OP_MINUS;
+		enum operator op = (expression->children[i]->tok.type == TOKEN_PLUS) ? OP_PLUS : OP_MINUS;
 		struct expr_tree *op_tree = expr_tree_make_operator(op);
 
 		op_tree->left  = tree;
@@ -154,7 +154,7 @@ struct expr_tree *convert_term(struct semantic_context *ctx, struct ast *term)
 
 	for(size_t i = 1; i < term->children_cnt; i += 2)
 	{
-		enum operator op = (term->children[i]->value.tok.type == TOKEN_MUL) ? OP_MUL : OP_DIV;
+		enum operator op = (term->children[i]->tok.type == TOKEN_MUL) ? OP_MUL : OP_DIV;
 		struct expr_tree *op_tree = expr_tree_make_operator(op);
 
 		op_tree->left  = tree;
@@ -170,17 +170,17 @@ struct expr_tree *convert_factor(struct semantic_context *ctx, struct ast *facto
 {
 	struct expr_tree *tree = NULL;
 
-	switch(factor->children[0]->value.tok.type)
+	switch(factor->children[0]->tok.type)
 	{
 		case TOKEN_LITERAL:
-			tree = expr_tree_make_literal(factor->children[0]->value.tok.value.lit);
+			tree = expr_tree_make_literal(factor->children[0]->tok.lit);
 			break;
 
 		case TOKEN_IDENTIFIER:
-			if(factor->children[0]->value.tok.value.sym != NULL)
+			if(factor->children[0]->tok.sym != NULL)
 			{
-				if(accept_variable(ctx, factor->children[0]->value.tok))
-					tree = expr_tree_make_symbol(factor->children[0]->value.tok.value.sym);
+				if(accept_variable(ctx, factor->children[0]->tok))
+					tree = expr_tree_make_symbol(factor->children[0]->tok.sym);
 			}
 			break;
 

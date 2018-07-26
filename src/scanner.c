@@ -125,29 +125,36 @@ struct token lex(struct lex_context *ctx)
 	{
 		case FSA_LITERAL:
 			result.type = TOKEN_LITERAL;
-			result.value.lit = atoi(text);
+			result.lit = atoi(text);
 			result.loc = text_loc;
 			break;
+
 		case FSA_WORD:
 			result = make_token_word(text, ctx->st, text_loc);
 			break;
+
 		case FSA_SIGN:
 			result = make_token_operator(text, text_loc);
 			break;
+
 		case FSA_OPERATOR:
 			result = make_token_operator(text, text_loc);
 			break;
+
 		case FSA_COLON:
 			result.type = TOKEN_COLON;
 			result.loc = text_loc;
 			break;
+
 		case FSA_SEMICOLON:
 			result.type = TOKEN_SEMICOLON;
 			result.loc = text_loc;
 			break;
+
 		case FSA_PAREN:
 			result = make_token_paren(text, text_loc);
 			break;
+
 		default:
 			result.type = TOKEN_EOF;
 			result.loc = ctx->loc;
@@ -241,7 +248,7 @@ struct token make_token_word(char *text, struct symbol_table *st, struct locatio
 		if(sym == NULL)
 			sym = symbol_table_add(st, text);
 
-		tok.value.sym = sym;
+		tok.sym = sym;
 	}
 
 	tok.loc = loc;
@@ -258,15 +265,19 @@ struct token make_token_operator(char *text, struct location loc)
 		case '+':
 			tok.type = TOKEN_PLUS;
 			break;
+
 		case '-':
 			tok.type = TOKEN_MINUS;
 			break;
+
 		case '*':
 			tok.type = TOKEN_MUL;
 			break;
+
 		case '/':
 			tok.type = TOKEN_DIV;
 			break;
+
 		default: // case '=':
 			tok.type = TOKEN_EQUAL;
 			break;
@@ -286,6 +297,7 @@ struct token make_token_paren(char *text, struct location loc)
 		case '(':
 			tok.type = TOKEN_LPAREN;
 			break;
+
 		default: // case ')':
 			tok.type = TOKEN_RPAREN;
 			break;

@@ -39,8 +39,7 @@ struct ast
 
 		/*! @brief The terminal value of the node */
 		struct token tok;
-
-	} value; /*!< @brief The value of the node */
+	};
 
 	/*! @brief The number of children */
 	size_t children_cnt;

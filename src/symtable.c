@@ -91,7 +91,7 @@ struct symbol *symbol_table_add(struct symbol_table *st, const char* id)
 	strcpy(new_symbol->id, id);
 
 	// calculate the bucket index
-	const uint8_t index = hash_str(id) & (st->buckets_cnt - 1);
+	uint8_t index = hash_str(id) & (st->buckets_cnt - 1);
 
 	// add the new symbol node in the bucket
 	new_symbol->next = st->buckets[index];
@@ -155,8 +155,6 @@ void rehash(struct symbol_table *st, size_t cnt)
 	for(size_t i = 0; i < new_st.buckets_cnt; ++i)
 		new_st.buckets[i] = NULL;
 
-	new_st.symbols_cnt = 0;
-
 	// move the symbols from the old symbol table to the new symbol table
 	for(size_t i = 0; i < st->buckets_cnt; ++i)
 	{
@@ -168,16 +166,18 @@ void rehash(struct symbol_table *st, size_t cnt)
 			struct symbol *tmp_next = tmp->next;
 
 			// calculate the new bucket index
-			const uint8_t index = hash_str(tmp->id) & (new_st.buckets_cnt - 1);
+			uint8_t index = hash_str(tmp->id) & (new_st.buckets_cnt - 1);
 
 			// add the new symbol node in the bucket
 			tmp->next = new_st.buckets[index];
 			new_st.buckets[index] = tmp;
-			new_st.symbols_cnt++;
 
 			tmp = tmp_next;
 		}
 	}
+
+	// set the number of symbols of the new symbol table
+	new_st.symbols_cnt = st->symbols_cnt;
 
 	*st = new_st;
 }

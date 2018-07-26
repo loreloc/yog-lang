@@ -29,7 +29,7 @@ struct error
 			/*! @brief The text string */
 			char text[ID_STR_SIZE];
 
-		} lexical;
+		} lex_info;
 
 		struct
 		{
@@ -39,16 +39,15 @@ struct error
 			/*! @brief The expected token types bit set */
 			enum token_type expected;
 
-		} syntactic;
+		} syn_info;
 
 		struct
 		{
 			/*! @brief A symbol pointer to the undefined variable */
 			struct symbol *sym;
 
-		} semantic;
-
-	} info; /*!< @brief The informations about the error */
+		} sem_info;
+	};
 
 	/*! @brief The next error in the error list */
 	struct error *next;

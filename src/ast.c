@@ -6,7 +6,7 @@ struct ast *ast_make_nonterminal(enum ast_nonterminal_type nt)
 	struct ast *tree = ymalloc(sizeof(struct ast));
 
 	tree->type = AST_NONTERMINAL;
-	tree->value.nt = nt;
+	tree->nt = nt;
 	tree->children_cnt = 0;
 	tree->children = NULL;
 
@@ -18,7 +18,7 @@ struct ast *ast_make_terminal(struct token tok)
 	struct ast *tree = ymalloc(sizeof(struct ast));
 
 	tree->type = AST_TERMINAL;
-	tree->value.tok = tok;
+	tree->tok = tok;
 	tree->children_cnt = 0;
 	tree->children = NULL;
 

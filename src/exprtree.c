@@ -49,40 +49,29 @@ void expr_tree_clear(struct expr_tree *tree)
 	free(tree);
 }
 
-int64_t expr_tree_eval(struct expr_tree *tree)
+int64_t expr_tree_evaluate(struct expr_tree *tree)
 {
 	if(tree->type == EXPR_NODE_LITERAL)
 		return tree->value.lit;
 	else if(tree->type == EXPR_NODE_VARIABLE)
 		return tree->value.sym->value;
 
-	int64_t result;
+	int64_t lval = (tree->left != NULL) ? expr_tree_evaluate(tree->left) : 0;
+	int64_t rval = expr_tree_evaluate(tree->right);
 
 	switch(tree->value.op)
 	{
 		case OP_PLUS:
-			if(tree->left == NULL)
-				result = expr_tree_eval(tree->right);
-			else
-				result = expr_tree_eval(tree->left) + expr_tree_eval(tree->right);
-			break;
+			return lval + rval;
 
 		case OP_MINUS:
-			if(tree->left == NULL)
-				result = -expr_tree_eval(tree->right);
-			else
-				result = expr_tree_eval(tree->left) - expr_tree_eval(tree->right);
-			break;
+			return lval - rval;
 
 		case OP_MUL:
-			result = expr_tree_eval(tree->left) * expr_tree_eval(tree->right);
-			break;
+			return lval * rval;
 
 		default: // case OP_DIV:
-			result = expr_tree_eval(tree->left) / expr_tree_eval(tree->right);
-			break;
+			return lval / rval;
 	}
-
-	return result;
 }
 

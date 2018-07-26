@@ -33,7 +33,6 @@ void parse_context_init(struct parse_context *ctx, FILE *source, struct symbol_t
 
 /**
  * @brief Parse the source code
- * @see https://en.wikipedia.org/wiki/Recursive_descent_parser
  * 
  * LL(1) parser for the following grammar (EBNF syntax)
  * ```
