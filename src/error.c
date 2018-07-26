@@ -82,7 +82,7 @@ void error_list_show(struct error_list errs)
 			case ERROR_SYNTACTIC:
 				printf("expected token ");
 				print_expected_tokens(tmp->syn_info.expected);
-				printf(" but found token \"%s\"\n", token_type_str(tmp->syn_info.actual));
+				printf("but found token \"%s\"\n", token_type_str(tmp->syn_info.actual));
 				break;
 
 			case ERROR_SEMANTIC:
@@ -112,22 +112,13 @@ void error_list_add(struct error_list *errs, struct error *new_err)
 void print_expected_tokens(enum token_type types)
 {
 	int mask = 1;
-	int val = 0;
-
-	while(val == 0 && mask <= TOKEN_TYPE_MAX)
-	{
-		val = (int)types & mask;
-		mask <<= 1;
-	}
-
-	printf("\"%s\"", token_type_str((enum token_type)val));
 
 	while(mask <= TOKEN_TYPE_MAX)
 	{
-		val = (int)types & mask;
+		enum token_type type = types & mask;
 
-		if(val)
-			printf(" or \"%s\"", token_type_str((enum token_type)val));
+		if(type != 0)
+			printf("\"%s\" ", token_type_str(type));
 	
 		mask <<= 1;
 	}

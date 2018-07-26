@@ -30,7 +30,7 @@ enum token_type
 };
 
 /*! @brief The maximum token type value */
-#define TOKEN_TYPE_MAX (int)(TOKEN_EQUAL)
+#define TOKEN_TYPE_MAX (int)(TOKEN_RPAREN)
 
 /*! @brief The token data structure */
 struct token
