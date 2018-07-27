@@ -3,39 +3,52 @@
 
 void print_expected_tokens(enum token_type types);
 
-struct error *error_make_lexical(struct location loc, const char *text)
+struct error *error_make_invalid_token(struct location loc, const char *text)
 {
 	struct error *err = ymalloc(sizeof(struct error));
 
 	err->next = NULL;
 	err->loc = loc;
-	err->type = ERROR_LEXICAL;
-	snprintf(err->lex_info.text, ID_STR_SIZE, "%s", text);
+	err->type = ERROR_INVALID_TOKEN;
+	snprintf(err->info.lexical.text, ID_STR_SIZE, "%s", text);
 
 	return err;
 }
 
-struct error *error_make_syntactic(struct location loc, enum token_type actual, enum token_type expected)
+struct error *error_make_unexpected_token(struct location loc, enum token_type act, enum token_type exp)
 {
 	struct error *err = ymalloc(sizeof(struct error));
 
 	err->next = NULL;
 	err->loc = loc;
-	err->type = ERROR_SYNTACTIC;
-	err->syn_info.actual = actual;
-	err->syn_info.expected = expected;
+	err->type = ERROR_UNEXPECTED_TOKEN;
+	err->info.syntactic.act = act;
+	err->info.syntactic.exp = exp;
 
 	return err;
 }
 
-struct error *error_make_semantic(struct location loc, struct symbol *sym)
+struct error *error_make_undeclared_var(struct location loc, struct symbol *sym)
 {
 	struct error *err = ymalloc(sizeof(struct error));
 
 	err->next = NULL;
 	err->loc = loc;
-	err->type = ERROR_SEMANTIC;
-	err->sem_info.sym = sym;
+	err->type = ERROR_UNDECLARED_VAR;
+	err->info.semantic.sym = sym;
+
+	return err;
+}
+
+struct error *error_make_multiple_decl(struct location loc, struct location first, struct symbol *sym)
+{
+	struct error *err = ymalloc(sizeof(struct error));
+
+	err->next = NULL;
+	err->loc = loc;
+	err->type = ERROR_MULTIPLE_DECL;
+	err->info.semantic.first = first;
+	err->info.semantic.sym = sym;
 
 	return err;
 }
@@ -75,18 +88,23 @@ void error_list_show(struct error_list errs)
 
 		switch(tmp->type)
 		{
-			case ERROR_LEXICAL:
-				printf("invalid token \"%s\"\n", tmp->lex_info.text);
+			case ERROR_INVALID_TOKEN:
+				printf("invalid token \"%s\"\n", tmp->info.lexical.text);
 				break;
 
-			case ERROR_SYNTACTIC:
+			case ERROR_UNEXPECTED_TOKEN:
 				printf("expected token ");
-				print_expected_tokens(tmp->syn_info.expected);
-				printf("but found token \"%s\"\n", token_type_str(tmp->syn_info.actual));
+				print_expected_tokens(tmp->info.syntactic.exp);
+				printf("but found token \"%s\"\n", token_type_str(tmp->info.syntactic.act));
 				break;
 
-			case ERROR_SEMANTIC:
-				printf("undeclared variable \"%s\"\n", tmp->sem_info.sym->id);
+			case ERROR_UNDECLARED_VAR:
+				printf("undeclared variable \"%s\"\n", tmp->info.semantic.sym->id);
+				break;
+
+			case ERROR_MULTIPLE_DECL:
+				printf("multiple declaration of \"%s\", first defined at %lu, %lu\n",
+					tmp->info.semantic.sym->id, tmp->info.semantic.first.row, tmp->info.semantic.first.col);
 				break;
 		}
 

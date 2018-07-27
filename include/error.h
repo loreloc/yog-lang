@@ -8,9 +8,10 @@
 /*! @brief The types of an error node */
 enum error_type
 {
-	ERROR_LEXICAL,
-	ERROR_SYNTACTIC,
-	ERROR_SEMANTIC
+	ERROR_INVALID_TOKEN,
+	ERROR_UNEXPECTED_TOKEN,
+	ERROR_UNDECLARED_VAR,
+	ERROR_MULTIPLE_DECL
 };
 
 /*! @brief The node of the error list */
@@ -29,25 +30,29 @@ struct error
 			/*! @brief The text string */
 			char text[ID_STR_SIZE];
 
-		} lex_info;
+		} lexical;
 
 		struct
 		{
 			/*! @brief The actual token type found */
-			enum token_type actual;
+			enum token_type act;
 
 			/*! @brief The expected token types bit set */
-			enum token_type expected;
+			enum token_type exp;
 
-		} syn_info;
+		} syntactic;
 
 		struct
 		{
+			/*! @brief The location where the variable was declared first */
+			struct location first;
+
 			/*! @brief A symbol pointer to the undefined variable */
 			struct symbol *sym;
 
-		} sem_info;
-	};
+		} semantic;
+
+	} info; /*!< @brief The informations about the error */
 
 	/*! @brief The next error in the error list */
 	struct error *next;
@@ -64,29 +69,38 @@ struct error_list
 };
 
 /**
- * @brief Make a new lexical error
+ * @brief Make a new invalid token lexical error
  * @param loc The error location in the source code
  * @param text The string message that rappresents the lexical error
- * @return A new lexical error
+ * @return A new error
  */
-struct error *error_make_lexical(struct location loc, const char *text);
+struct error *error_make_invalid_token(struct location loc, const char *text);
 
 /**
- * @brief Make a new syntactic error
+ * @brief Make a new unexpected token syntactic error
  * @param loc The error location in the source code
- * @param actual The actual token type found
- * @param expected The expected token types bit set
- * @return A new syntactic error
+ * @param act The actual token type found
+ * @param exp The expected token types bit set
+ * @return A new error
  */
-struct error *error_make_syntactic(struct location loc, enum token_type actual, enum token_type expected);
+struct error *error_make_unexpected_token(struct location loc, enum token_type act, enum token_type exp);
 
 /**
- * @brief Make a new semantic error
+ * @brief Make a new undeclared variable semantic error
  * @param loc The error location in the source code
- * @param sym A pointer to the undefined variable
- * @return A new semantic error
+ * @param sym A pointer to the undeclared variable symbol
+ * @return A new error
  */
-struct error *error_make_semantic(struct location loc, struct symbol *sym);
+struct error *error_make_undeclared_var(struct location loc, struct symbol *sym);
+
+/**
+ * @brief Make a new multiple declaration semantic error
+ * @param loc The error location in the source code
+ * @param first The location where the variable was declared first
+ * @param sym A pointer to the multiple declared variable symbol
+ * @return A new error
+ */
+struct error *error_make_multiple_decl(struct location loc, struct location first, struct symbol *sym);
 
 /**
  * @brief Initialize an error list

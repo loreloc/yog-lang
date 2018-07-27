@@ -35,6 +35,7 @@ enum char_class
 	CHAR_UNKNOW
 };
 
+bool report_lexical_error(struct lex_context *ctx, struct location loc, char *text);
 void update_cursor(struct location *loc, char c);
 enum char_class identify_char(char c);
 enum fsa_state next_state(enum fsa_state state, enum char_class class);
@@ -87,7 +88,7 @@ struct token lex(struct lex_context *ctx)
 		}
 		else if(state == FSA_ERROR && new_state != FSA_ERROR)
 		{
-			error_list_add(ctx->errs, error_make_lexical(text_loc, (text_len < TEXT_SIZE) ? text : TEXT_OVERFLOW_MSG));
+			report_lexical_error(ctx, text_loc, (text_len < TEXT_SIZE) ? text : TEXT_OVERFLOW_MSG);
 			memset(text, '\0', TEXT_SIZE);
 			text_len = 0;
 			new_state = FSA_START;
@@ -96,7 +97,7 @@ struct token lex(struct lex_context *ctx)
 		{
 			if(text_len == TEXT_SIZE)
 			{
-				error_list_add(ctx->errs, error_make_lexical(text_loc, TEXT_OVERFLOW_MSG));
+				report_lexical_error(ctx, text_loc, TEXT_OVERFLOW_MSG);
 				memset(text, '\0', TEXT_SIZE);
 				text_len = 0;
 				new_state = FSA_START;
@@ -162,6 +163,11 @@ struct token lex(struct lex_context *ctx)
 	}
 
 	return result;
+}
+
+bool report_lexical_error(struct lex_context *ctx, struct location loc, char *text)
+{
+	error_list_add(ctx->errs, error_make_invalid_token(loc, text));
 }
 
 void update_cursor(struct location *loc, char c)

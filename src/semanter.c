@@ -35,7 +35,7 @@ bool accept_variable(struct semantic_context *ctx, struct token tok)
 	// check if the symbol has been declared
 	if(tok.sym->type == SYMBOL_UNKNOW)
 	{
-		error_list_add(ctx->errs, error_make_semantic(tok.loc, tok.sym));
+		error_list_add(ctx->errs, error_make_undeclared_var(tok.loc, tok.sym));
 		return false;
 	}
 
@@ -51,8 +51,22 @@ void analyse_variables(struct semantic_context *ctx)
 		struct token id_tok   = variables->children[i  ]->tok;
 		struct token type_tok = variables->children[i+2]->tok;
 
-		if(id_tok.sym != NULL && type_tok.type == TOKEN_INT)
-			id_tok.sym->type = SYMBOL_INTEGER;
+		if(id_tok.sym != NULL)
+		{
+			// check for multiple definitions
+			if(id_tok.sym->type != SYMBOL_UNKNOW)
+			{
+				error_list_add(ctx->errs, error_make_multiple_decl(id_tok.loc, id_tok.sym->loc, id_tok.sym));
+			}
+			else
+			{
+				if(type_tok.type == TOKEN_INT)
+				{
+					id_tok.sym->type = SYMBOL_INTEGER;
+					id_tok.sym->loc = id_tok.loc;
+				}
+			}
+		}
 	}
 }
 

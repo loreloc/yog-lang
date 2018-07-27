@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include "location.h"
 #include "symtable.h"
 
 /*! @brief The types of a token */

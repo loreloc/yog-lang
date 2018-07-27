@@ -3,9 +3,10 @@
 
 #pragma once
 
-#include <stdint.h>
 #include "defines.h"
 #include "common.h"
+#include "location.h"
+
 
 /*! @brief The types of a symbol node */
 enum symbol_type
@@ -19,6 +20,9 @@ struct symbol
 {
 	/*! @brief The type of the symbol node */
 	enum symbol_type type;
+
+	/*! @brief The location in the source code where the symbol is defined */
+	struct location loc;
 
 	/*! @brief The identifier string of the symbol */
 	char id[ID_STR_SIZE];
