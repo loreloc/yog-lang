@@ -35,7 +35,7 @@ enum char_class
 	CHAR_UNKNOW
 };
 
-bool report_lexical_error(struct lex_context *ctx, struct location loc, char *text);
+void report_lexical_error(struct lex_context *ctx, struct location loc, char *text);
 void update_cursor(struct location *loc, char c);
 enum char_class identify_char(char c);
 enum fsa_state next_state(enum fsa_state state, enum char_class class);
@@ -165,7 +165,7 @@ struct token lex(struct lex_context *ctx)
 	return result;
 }
 
-bool report_lexical_error(struct lex_context *ctx, struct location loc, char *text)
+void report_lexical_error(struct lex_context *ctx, struct location loc, char *text)
 {
 	error_list_add(ctx->errs, error_make_invalid_token(loc, text));
 }
