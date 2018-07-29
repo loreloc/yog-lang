@@ -41,17 +41,21 @@ int main(int argc, char* argv[])
 	semantic_context_init(&sem_ctx, &st, &errs, tree);
 
 	// analyse the abstract syntax tree
-	struct instr_list instrs = semantic_context_analyse(&sem_ctx);
+	size_t tmp_cnt = 0;
+	struct instruction_list instrs = semantic_context_analyse(&sem_ctx, &tmp_cnt);
 
 	// check the error list
 	if(error_list_empty(errs))
 	{
 		// initialzie the interpreter
 		struct interpreter vm;
-		interpreter_init(&vm, instrs);
+		interpreter_init(&vm, instrs, tmp_cnt);
 
 		// execute the instructions
 		interpreter_execute(&vm);
+
+		// clear the interpreter
+		interpreter_clear(&vm);
 	}
 	else
 	{
@@ -59,7 +63,7 @@ int main(int argc, char* argv[])
 	}
 
 	// cleanup
-	instr_list_clear(&instrs);
+	instruction_list_clear(&instrs);
 	ast_clear(tree);
 	symbol_table_clear(&st);
 	error_list_clear(&errs);

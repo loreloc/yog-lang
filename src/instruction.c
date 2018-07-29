@@ -1,57 +1,19 @@
 
 #include "instruction.h"
 
-struct instr *instr_make_assign(struct symbol *sym, struct expr_tree *tree)
-{
-	struct instr *instr = ymalloc(sizeof(struct instr));
-
-	instr->next = NULL;
-	instr->type = INSTR_ASSIGN;
-	instr->sym = sym;
-	instr->tree = tree;
-
-	return instr;
-}
-
-struct instr *instr_make_input(struct symbol *sym)
-{
-	struct instr *instr = ymalloc(sizeof(struct instr));
-
-	instr->next = NULL;
-	instr->type = INSTR_INPUT;
-	instr->sym = sym;
-
-	return instr;
-}
-
-struct instr *instr_make_output(struct expr_tree *tree)
-{
-	struct instr *instr = ymalloc(sizeof(struct instr));
-
-	instr->next = NULL;
-	instr->type = INSTR_OUTPUT;
-	instr->tree = tree;
-
-	return instr;
-}
-
-void instr_list_init(struct instr_list *instrs)
+void instruction_list_init(struct instruction_list *instrs)
 {
 	instrs->head = NULL;
 	instrs->tail = NULL;
 }
 
-void instr_list_clear(struct instr_list *instrs)
+void instruction_list_clear(struct instruction_list *instrs)
 {
-	struct instr *tmp;
+	struct instruction *tmp;
 
 	while(instrs->head != NULL)
 	{
 		tmp = instrs->head;
-
-		if(tmp->type == INSTR_ASSIGN || tmp->type == INSTR_OUTPUT)
-			expr_tree_clear(tmp->tree);
-
 		instrs->head = tmp->next;
 		yfree(tmp);
 	}
@@ -59,14 +21,14 @@ void instr_list_clear(struct instr_list *instrs)
 	instrs->tail = NULL;
 }
 
-bool instr_list_empty(struct instr_list instrs)
+bool instruction_list_empty(struct instruction_list instrs)
 {
 	return instrs.head == NULL;
 }
 
-void instr_list_add(struct instr_list *instrs, struct instr *new_instr)
+void instruction_list_add(struct instruction_list *instrs, struct instruction *new_instr)
 {
-	if(instr_list_empty(*instrs))
+	if(instruction_list_empty(*instrs))
 	{
 		instrs->head = new_instr;
 		instrs->tail = new_instr;
@@ -75,6 +37,28 @@ void instr_list_add(struct instr_list *instrs, struct instr *new_instr)
 	{
 		instrs->tail->next = new_instr;
 		instrs->tail = new_instr;
+	}
+}
+
+struct instruction_list instruction_list_merge(struct instruction_list instrs1, struct instruction_list instrs2)
+{
+	if(instruction_list_empty(instrs1))
+	{
+		return instrs2;
+	}
+	else if(instruction_list_empty(instrs2))
+	{
+		return instrs1;
+	}
+	else
+	{
+		struct instruction_list instrs;
+
+		instrs.head = instrs1.head;
+		instrs.tail = instrs2.tail;
+		instrs1.tail->next = instrs2.head;
+
+		return instrs;
 	}
 }
 

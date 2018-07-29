@@ -226,7 +226,7 @@ struct ast *parse_factor(struct parse_context *ctx)
 	}
 	else if(accept_token(ctx, tree, TOKEN_PLUS | TOKEN_MINUS))
 	{
-		ast_add_child(tree, parse_expression(ctx));
+		ast_add_child(tree, parse_factor(ctx));
 	}
 	else if(accept_token(ctx, tree, TOKEN_LPAREN))
 	{

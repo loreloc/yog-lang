@@ -18,6 +18,12 @@ struct semantic_context
 
 	/*! @brief A pointer to the abstract syntax tree to analyse */
 	struct ast *tree;
+
+	/*! @brief The instruction list of the current statement */
+	struct instruction_list instrs;
+
+	/*! @brief The number of temporary variables */
+	size_t tmp_cnt;
 };
 
 /**
@@ -32,7 +38,8 @@ void semantic_context_init(struct semantic_context *ctx, struct symbol_table *st
 /**
  * @brief Analyse the abstract syntax tree holded by the semantic context
  * @param ctx A pointer to the semantic context
+ * @param tmp_cnt A pointer to the number of temporary variables
  * @return The instruction list
  */
-struct instr_list semantic_context_analyse(struct semantic_context *ctx);
+struct instruction_list semantic_context_analyse(struct semantic_context *ctx, size_t *tmp_cnt);
 
