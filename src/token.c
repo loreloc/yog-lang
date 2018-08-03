@@ -1,45 +1,54 @@
 
 #include "token.h"
 
-const char *token_type_str(enum token_type type)
+const char *token_type_str(token_type_t type)
 {
-	switch(type)
+	int64_t type_index;
+
+	__asm__
+	(
+		"bsr %1, %0\n\t"
+		: "=r"(type_index)
+		: "r"(type)
+	);
+
+	switch(type_index)
 	{
-		case TOKEN_EOF:
+		case 0:
 			return "EOF";
-		case TOKEN_VAR:
+		case 1:
 			return "var";
-		case TOKEN_BEGIN:
+		case 2:
 			return "begin";
-		case TOKEN_END:
+		case 3:
 			return "end";
-		case TOKEN_INT:
+		case 4:
 			return "int";
-		case TOKEN_READ:
+		case 5:
 			return "read";
-		case TOKEN_WRITE:
+		case 6:
 			return "write";
-		case TOKEN_COLON:
+		case 7:
 			return ":";
-		case TOKEN_SEMICOLON:
+		case 8:
 			return ";";
-		case TOKEN_LITERAL:
+		case 9:
 			return "literal";
-		case TOKEN_IDENTIFIER:
+		case 10:
 			return "identifier";
-		case TOKEN_PLUS:
+		case 11:
 			return "+";
-		case TOKEN_MINUS:
+		case 12:
 			return "-";
-		case TOKEN_MUL:
+		case 13:
 			return "*";
-		case TOKEN_DIV:
+		case 14:
 			return "/";
-		case TOKEN_EQUAL:
+		case 15:
 			return "=";
-		case TOKEN_LPAREN:
+		case 16:
 			return "(";
-		case TOKEN_RPAREN:
+		case 17:
 			return ")";
 		default:
 			return NULL;

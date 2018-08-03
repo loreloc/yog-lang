@@ -1,7 +1,7 @@
 
 #include "error.h"
 
-void print_expected_tokens(enum token_type types);
+void print_expected_tokens(token_type_t types);
 
 struct error *error_make_invalid_token(struct location loc, const char *text)
 {
@@ -15,15 +15,15 @@ struct error *error_make_invalid_token(struct location loc, const char *text)
 	return err;
 }
 
-struct error *error_make_unexpected_token(struct location loc, enum token_type act, enum token_type exp)
+struct error *error_make_unexpected_token(struct location loc, token_type_t actual, token_type_t expected)
 {
 	struct error *err = ymalloc(sizeof(struct error));
 
 	err->next = NULL;
 	err->loc = loc;
 	err->type = ERROR_UNEXPECTED_TOKEN;
-	err->info.syntactic.act = act;
-	err->info.syntactic.exp = exp;
+	err->info.syntactic.actual = actual;
+	err->info.syntactic.expected = expected;
 
 	return err;
 }
@@ -94,8 +94,8 @@ void error_list_show(struct error_list errs)
 
 			case ERROR_UNEXPECTED_TOKEN:
 				printf("expected token ");
-				print_expected_tokens(tmp->info.syntactic.exp);
-				printf("but found token \"%s\"\n", token_type_str(tmp->info.syntactic.act));
+				print_expected_tokens(tmp->info.syntactic.expected);
+				printf("but found token \"%s\"\n", token_type_str(tmp->info.syntactic.actual));
 				break;
 
 			case ERROR_UNDECLARED_VAR:
@@ -127,13 +127,13 @@ void error_list_add(struct error_list *errs, struct error *new_err)
 	}
 }
 
-void print_expected_tokens(enum token_type types)
+void print_expected_tokens(token_type_t types)
 {
-	int mask = 1;
+	token_type_t mask = 1;
 
 	while(mask <= TOKEN_TYPE_MAX)
 	{
-		enum token_type type = types & mask;
+		token_type_t type = types & mask;
 
 		if(type != 0)
 			printf("\"%s\" ", token_type_str(type));

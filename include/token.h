@@ -5,31 +5,28 @@
 
 #include "symtable.h"
 
-/*! @brief The types of a token */
-enum token_type
-{
-	TOKEN_EOF        = (1 <<  0),
-	TOKEN_VAR        = (1 <<  1),
-	TOKEN_BEGIN      = (1 <<  2),
-	TOKEN_END        = (1 <<  3),
-	TOKEN_INT        = (1 <<  4),
-	TOKEN_READ       = (1 <<  5),
-	TOKEN_WRITE      = (1 <<  6),
-	TOKEN_COLON      = (1 <<  7),
-	TOKEN_SEMICOLON  = (1 <<  8),
-	TOKEN_LITERAL    = (1 <<  9),
-	TOKEN_IDENTIFIER = (1 << 10),
-	TOKEN_PLUS       = (1 << 11),
-	TOKEN_MINUS      = (1 << 12),
-	TOKEN_MUL        = (1 << 13),
-	TOKEN_DIV        = (1 << 14),
-	TOKEN_EQUAL      = (1 << 15),
-	TOKEN_LPAREN     = (1 << 16),
-	TOKEN_RPAREN     = (1 << 17)
-};
+#define TOKEN_EOF        (1ull <<  0)
+#define TOKEN_VAR        (1ull <<  1)
+#define TOKEN_BEGIN      (1ull <<  2)
+#define TOKEN_END        (1ull <<  3)
+#define TOKEN_INT        (1ull <<  4)
+#define TOKEN_READ       (1ull <<  5)
+#define TOKEN_WRITE      (1ull <<  6)
+#define TOKEN_COLON      (1ull <<  7)
+#define TOKEN_SEMICOLON  (1ull <<  8)
+#define TOKEN_LITERAL    (1ull <<  9)
+#define TOKEN_IDENTIFIER (1ull << 10)
+#define TOKEN_PLUS       (1ull << 11)
+#define TOKEN_MINUS      (1ull << 12)
+#define TOKEN_MUL        (1ull << 13)
+#define TOKEN_DIV        (1ull << 14)
+#define TOKEN_EQUAL      (1ull << 15)
+#define TOKEN_LPAREN     (1ull << 16)
+#define TOKEN_RPAREN     (1ull << 17)
+#define TOKEN_TYPE_MAX   TOKEN_RPAREN
 
-/*! @brief The maximum token type value */
-#define TOKEN_TYPE_MAX (int)(TOKEN_RPAREN)
+/*! @brief The token type */
+typedef uint64_t token_type_t;
 
 /*! @brief The token data structure */
 struct token
@@ -38,7 +35,7 @@ struct token
 	struct location loc;
 	
 	/*! @brief The type of the token */
-	enum token_type type;
+	token_type_t type;
 
 	union
 	{
@@ -55,5 +52,5 @@ struct token
  * @param type The token type to translate
  * @return A constant string that rappresents the token type
  */
-const char *token_type_str(enum token_type type);
+const char *token_type_str(token_type_t type);
 

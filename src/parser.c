@@ -1,12 +1,12 @@
 
 #include "parser.h"
 
-void report_syntactic_error(struct parse_context *ctx, enum token_type exp);
+void report_syntactic_error(struct parse_context *ctx, token_type_t expected);
 void next_token(struct parse_context *ctx);
-bool check_token(struct parse_context *ctx, enum token_type types);
-bool accept_token(struct parse_context *ctx, struct ast *tree, enum token_type types);
-void replace_token(struct parse_context *ctx, struct ast *tree, enum token_type type, enum token_type exp);
-bool expect_token(struct parse_context *ctx, struct ast *tree, enum token_type type);
+bool check_token(struct parse_context *ctx, token_type_t types);
+bool accept_token(struct parse_context *ctx, struct ast *tree, token_type_t types);
+void replace_token(struct parse_context *ctx, struct ast *tree, token_type_t type, token_type_t expected);
+bool expect_token(struct parse_context *ctx, struct ast *tree, token_type_t type);
 
 struct ast *parse_source(struct parse_context *ctx);
 struct ast *parse_variables(struct parse_context *ctx);
@@ -34,10 +34,10 @@ struct ast *parse(struct parse_context *ctx)
 	return parse_source(ctx);
 }
 
-void report_syntactic_error(struct parse_context *ctx, enum token_type exp)
+void report_syntactic_error(struct parse_context *ctx, token_type_t expected)
 {
 	// add a new syntactic error to the error list
-	error_list_add(ctx->errs, error_make_unexpected_token(ctx->curr_tok.loc, ctx->curr_tok.type, exp));
+	error_list_add(ctx->errs, error_make_unexpected_token(ctx->curr_tok.loc, ctx->curr_tok.type, expected));
 }
 
 void next_token(struct parse_context *ctx)
@@ -47,12 +47,12 @@ void next_token(struct parse_context *ctx)
 	ctx->curr_tok = lex(&ctx->lex_ctx);
 }
 
-bool check_token(struct parse_context *ctx, enum token_type types)
+bool check_token(struct parse_context *ctx, token_type_t types)
 {
 	return ctx->curr_tok.type & types;
 }
 
-bool accept_token(struct parse_context *ctx, struct ast *tree, enum token_type types)
+bool accept_token(struct parse_context *ctx, struct ast *tree, token_type_t types)
 {
 	// if the token type is one of types
 	if(check_token(ctx, types))
@@ -66,7 +66,7 @@ bool accept_token(struct parse_context *ctx, struct ast *tree, enum token_type t
 	return false;
 }
 
-void replace_token(struct parse_context *ctx, struct ast *tree, enum token_type type, enum token_type exp)
+void replace_token(struct parse_context *ctx, struct ast *tree, token_type_t type, token_type_t expected)
 {
 	// initialize the error recovering token
 	struct token tok;
@@ -78,10 +78,10 @@ void replace_token(struct parse_context *ctx, struct ast *tree, enum token_type 
 	ast_add_child(tree, ast_make_terminal(tok));
 
 	// report the error
-	report_syntactic_error(ctx, exp);
+	report_syntactic_error(ctx, expected);
 }
 
-bool expect_token(struct parse_context *ctx, struct ast *tree, enum token_type type)
+bool expect_token(struct parse_context *ctx, struct ast *tree, token_type_t type)
 {
 	// check if the token type is equal to type
 	if(accept_token(ctx, tree, type))

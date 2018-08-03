@@ -35,10 +35,10 @@ struct error
 		struct
 		{
 			/*! @brief The actual token type found */
-			enum token_type act;
+			token_type_t actual;
 
 			/*! @brief The expected token types bit set */
-			enum token_type exp;
+			token_type_t expected;
 
 		} syntactic;
 
@@ -79,11 +79,11 @@ struct error *error_make_invalid_token(struct location loc, const char *text);
 /**
  * @brief Make a new unexpected token syntactic error
  * @param loc The error location in the source code
- * @param act The actual token type found
- * @param exp The expected token types bit set
+ * @param actual The actual token type found
+ * @param expected The expected token types bit set
  * @return A new error
  */
-struct error *error_make_unexpected_token(struct location loc, enum token_type act, enum token_type exp);
+struct error *error_make_unexpected_token(struct location loc, token_type_t actual, token_type_t expected);
 
 /**
  * @brief Make a new undeclared variable semantic error
