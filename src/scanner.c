@@ -13,6 +13,7 @@ enum fsa_state
 	FSA_SIGN,
 	FSA_OPERATOR,
 	FSA_COLON,
+	FSA_ASSIGN,
 	FSA_SEMICOLON,
 	FSA_PAREN,
 	FSA_ERROR,
@@ -29,6 +30,7 @@ enum char_class
 	CHAR_SIGN,
 	CHAR_OPERATOR,
 	CHAR_COLON,
+	CHAR_EQUAL,
 	CHAR_SEMICOLON,
 	CHAR_PAREN,
 	CHAR_EOF,
@@ -147,6 +149,11 @@ struct token lex(struct lex_context *ctx)
 			result.loc = text_loc;
 			break;
 
+		case FSA_ASSIGN:
+			result.type = TOKEN_ASSIGN;
+			result.loc = text_loc;
+			break;
+
 		case FSA_SEMICOLON:
 			result.type = TOKEN_SEMICOLON;
 			result.loc = text_loc;
@@ -194,10 +201,12 @@ enum char_class identify_char(char c)
 		return CHAR_DIGIT;
 	else if(c == '+' || c == '-')
 		return CHAR_SIGN;
-	else if(c == '*' || c == '/' || c == '=')
+	else if(c == '*' || c == '/')
 		return CHAR_OPERATOR;
 	else if(c == ':')
 		return CHAR_COLON;
+	else if(c == '=')
+		return CHAR_EQUAL;
 	else if(c == ';')
 		return CHAR_SEMICOLON;
 	else if(c == '(' || c == ')')
@@ -210,18 +219,19 @@ enum char_class identify_char(char c)
 
 enum fsa_state next_state(enum fsa_state state, enum char_class class)
 {
-	static const enum fsa_state Transition_Table[9][10] =
+	static const enum fsa_state Transition_Table[10][11] =
 	{
-		             /*   WHITESPACE  DIGIT        ALPHABETICAL SIGN        OPERATOR      COLON       SEMICOLON      PAREN       EOF         UNKNOW   */
-		/* START     */ { FSA_START,  FSA_LITERAL, FSA_WORD,    FSA_SIGN,   FSA_OPERATOR, FSA_COLON,  FSA_SEMICOLON, FSA_PAREN,  FSA_EOF,    FSA_ERROR },
-		/* LITERAL   */ { FSA_ACCEPT, FSA_LITERAL, FSA_ERROR,   FSA_ACCEPT, FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT, FSA_ERROR },
-		/* WORD      */ { FSA_ACCEPT, FSA_WORD,    FSA_WORD,    FSA_ERROR,  FSA_ERROR,    FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT, FSA_ERROR },
-		/* SIGN      */ { FSA_ACCEPT, FSA_LITERAL, FSA_ACCEPT,  FSA_ACCEPT, FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT, FSA_ERROR },
-		/* OPERATOR  */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT, FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT, FSA_ERROR },
-		/* COLON     */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT, FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT, FSA_ERROR },
-		/* SEMICOLON */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT, FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT, FSA_ERROR },
-		/* PAREN     */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT, FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT, FSA_ERROR },
-		/* ERROR     */ { FSA_START,  FSA_ERROR,   FSA_ERROR,   FSA_ERROR,  FSA_ERROR,    FSA_ERROR,  FSA_ERROR,     FSA_ERROR,  FSA_ACCEPT, FSA_ERROR }
+		             /*   WHITESPACE  DIGIT        ALPHABETICAL SIGN        OPERATOR      COLON       EQUAL       SEMICOLON      PAREN       EOF         UNKNOW   */
+		/* START     */ { FSA_START,  FSA_LITERAL, FSA_WORD,    FSA_SIGN,   FSA_OPERATOR, FSA_COLON,  FSA_ERROR,  FSA_SEMICOLON, FSA_PAREN,  FSA_EOF,    FSA_ERROR },
+		/* LITERAL   */ { FSA_ACCEPT, FSA_LITERAL, FSA_ERROR,   FSA_ACCEPT, FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT, FSA_ERROR },
+		/* WORD      */ { FSA_ACCEPT, FSA_WORD,    FSA_WORD,    FSA_ERROR,  FSA_ERROR,    FSA_ACCEPT, FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT, FSA_ERROR },
+		/* SIGN      */ { FSA_ACCEPT, FSA_LITERAL, FSA_ACCEPT,  FSA_ACCEPT, FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT, FSA_ERROR },
+		/* OPERATOR  */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT, FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT, FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT, FSA_ERROR },
+		/* COLON     */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT, FSA_ACCEPT,   FSA_ACCEPT, FSA_ASSIGN, FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT, FSA_ERROR },
+		/* ASSIGN    */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT, FSA_ACCEPT,   FSA_ACCEPT, FSA_ERROR,  FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT, FSA_ERROR },
+		/* SEMICOLON */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT, FSA_ACCEPT,   FSA_ACCEPT, FSA_ERROR,  FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT, FSA_ERROR },
+		/* PAREN     */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT, FSA_ACCEPT,   FSA_ACCEPT, FSA_ERROR,  FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT, FSA_ERROR },
+		/* ERROR     */ { FSA_START,  FSA_ERROR,   FSA_ERROR,   FSA_ERROR,  FSA_ERROR,    FSA_ERROR,  FSA_ERROR,  FSA_ERROR,     FSA_ERROR,  FSA_ACCEPT, FSA_ERROR }
 	};
 
 	return Transition_Table[(size_t)state][(size_t)class];
@@ -280,12 +290,8 @@ struct token make_token_operator(char *text, struct location loc)
 			tok.type = TOKEN_MUL;
 			break;
 
-		case '/':
+		default: // case '/':
 			tok.type = TOKEN_DIV;
-			break;
-
-		default: // case '=':
-			tok.type = TOKEN_EQUAL;
 			break;
 	}
 

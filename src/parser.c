@@ -168,7 +168,7 @@ struct ast *parse_assign(struct parse_context *ctx)
 	struct ast *tree = ast_make_nonterminal(AST_NT_ASSIGN);
 
 	expect_token(ctx, tree, TOKEN_IDENTIFIER);
-	expect_token(ctx, tree, TOKEN_EQUAL);
+	expect_token(ctx, tree, TOKEN_ASSIGN);
 	ast_add_child(tree, parse_expression(ctx));
 
 	return tree;

@@ -20,7 +20,7 @@
 #define TOKEN_MINUS      (1ull << 12)
 #define TOKEN_MUL        (1ull << 13)
 #define TOKEN_DIV        (1ull << 14)
-#define TOKEN_EQUAL      (1ull << 15)
+#define TOKEN_ASSIGN     (1ull << 15)
 #define TOKEN_LPAREN     (1ull << 16)
 #define TOKEN_RPAREN     (1ull << 17)
 #define TOKEN_TYPE_MAX   TOKEN_RPAREN
