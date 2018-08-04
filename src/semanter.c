@@ -211,7 +211,12 @@ struct instruction_list analyse_branch(struct semantic_context *ctx, struct ast 
 	struct instruction *goto_instr = ymalloc(sizeof(struct instruction));
 	goto_instr->type = INSTRUCTION_GOTO;
 	goto_instr->dest.type = OPERAND_LABEL;
-	goto_instr->dest.index = push_label(ctx, &else_branch.tail->next);
+
+	if(instruction_list_empty(if_branch))
+		goto_instr->dest.index = push_label(ctx, &goto_instr->next);
+	else
+		goto_instr->dest.index = push_label(ctx, &if_branch.tail->next);
+
 	goto_instr->next = NULL;
 
 	struct instruction *branch_instr = ymalloc(sizeof(struct instruction));
@@ -223,9 +228,9 @@ struct instruction_list analyse_branch(struct semantic_context *ctx, struct ast 
 
 	instrs = ctx->instrs;
 	instruction_list_add(&instrs, branch_instr);
-	instrs = instruction_list_merge(instrs, if_branch);
-	instruction_list_add(&instrs, goto_instr);
 	instrs = instruction_list_merge(instrs, else_branch);
+	instruction_list_add(&instrs, goto_instr);
+	instrs = instruction_list_merge(instrs, if_branch);
 
 	return instrs;
 }

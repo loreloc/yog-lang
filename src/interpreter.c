@@ -115,7 +115,7 @@ void interpreter_execute(struct interpreter *vm)
 				break;
 
 			case INSTRUCTION_BRANCH:
-				if(!vm->temporary[instr.src1.index])
+				if(vm->temporary[instr.src1.index])
 				{
 					vm->ip = *vm->labels[instr.dest.index];
 					continue;
