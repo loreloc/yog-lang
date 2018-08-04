@@ -5,7 +5,7 @@
 
 #include "ast.h"
 #include "error.h"
-#include "instruction.h"
+#include "label.h"
 
 /*! @brief The semantic context data structure */
 struct semantic_context
@@ -21,6 +21,12 @@ struct semantic_context
 
 	/*! @brief The instruction list of the current statement */
 	struct instruction_list instrs;
+
+	/*! @brief The number of labels */
+	size_t labels_cnt;
+
+	/*! @brief The array of labels */
+	label_t *labels;
 
 	/*! @brief The number of temporary variables */
 	size_t tmp_cnt;
@@ -38,8 +44,7 @@ void semantic_context_init(struct semantic_context *ctx, struct symbol_table *st
 /**
  * @brief Analyse the abstract syntax tree holded by the semantic context
  * @param ctx A pointer to the semantic context
- * @param tmp_cnt A pointer to the number of temporary variables
  * @return The instruction list
  */
-struct instruction_list semantic_context_analyse(struct semantic_context *ctx, size_t *tmp_cnt);
+struct instruction_list semantic_context_analyse(struct semantic_context *ctx);
 

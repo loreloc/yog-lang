@@ -21,9 +21,11 @@ enum ast_nonterminal_type
 	AST_NT_ASSIGN,
 	AST_NT_INPUT,
 	AST_NT_OUTPUT,
+	AST_NT_BRANCH,
 	AST_NT_EXPRESSION,
 	AST_NT_TERM,
 	AST_NT_FACTOR,
+	AST_NT_CONDITION
 };
 
 /*! @brief Abstract Syntax Tree data structure */

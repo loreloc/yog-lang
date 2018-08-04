@@ -10,7 +10,8 @@ enum operand_type
 {
 	OPERAND_TEMPORARY,
 	OPERAND_LITERAL,
-	OPERAND_SYMBOL
+	OPERAND_SYMBOL,
+	OPERAND_LABEL,
 };
 
 /*! @brief The operand data structure */
@@ -21,8 +22,8 @@ struct operand
 
 	union
 	{
-		/*! @brief The index of the temporary variable */
-		size_t tmp;
+		/*! @brief The index of the temporary variable or the index of a label */
+		size_t index;
 
 		/*! @brief The literal value */
 		int64_t lit;
@@ -43,7 +44,15 @@ enum instruction_type
 	INSTRUCTION_MUL,
 	INSTRUCTION_DIV,
 	INSTRUCTION_PLS,
-	INSTRUCTION_NEG
+	INSTRUCTION_NEG,
+	INSTRUCTION_EQ,
+	INSTRUCTION_NEQ,
+	INSTRUCTION_LT,
+	INSTRUCTION_LTE,
+	INSTRUCTION_GT,
+	INSTRUCTION_GTE,
+	INSTRUCTION_GOTO,
+	INSTRUCTION_BRANCH
 };
 
 /*! @brief The three address code instruction */

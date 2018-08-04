@@ -50,6 +50,22 @@ const char *token_type_str(token_type_t type)
 			return "(";
 		case 17:
 			return ")";
+		case 18:
+			return "if";
+		case 19:
+			return "else";
+		case 20:
+			return "=";
+		case 21:
+			return "<>";
+		case 22:
+			return "<";
+		case 23:
+			return "<=";
+		case 24:
+			return ">";
+		case 25:
+			return ">=";
 		default:
 			return NULL;
 	}

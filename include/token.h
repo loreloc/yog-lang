@@ -23,7 +23,15 @@
 #define TOKEN_ASSIGN     (1ull << 15)
 #define TOKEN_LPAREN     (1ull << 16)
 #define TOKEN_RPAREN     (1ull << 17)
-#define TOKEN_TYPE_MAX   TOKEN_RPAREN
+#define TOKEN_IF         (1ull << 18)
+#define TOKEN_ELSE       (1ull << 19)
+#define TOKEN_EQ         (1ull << 20)
+#define TOKEN_NEQ        (1ull << 21)
+#define TOKEN_LT         (1ull << 22)
+#define TOKEN_LTE        (1ull << 23)
+#define TOKEN_GT         (1ull << 24)
+#define TOKEN_GTE        (1ull << 25)
+#define TOKEN_TYPE_MAX   TOKEN_GTE
 
 /*! @brief The token type */
 typedef uint64_t token_type_t;

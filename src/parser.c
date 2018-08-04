@@ -7,6 +7,7 @@ bool check_token(struct parse_context *ctx, token_type_t types);
 bool accept_token(struct parse_context *ctx, struct ast *tree, token_type_t types);
 void replace_token(struct parse_context *ctx, struct ast *tree, token_type_t type, token_type_t expected);
 bool expect_token(struct parse_context *ctx, struct ast *tree, token_type_t type);
+bool expect_multiple_token(struct parse_context *ctx, struct ast *tree, token_type_t type, token_type_t expected);
 
 struct ast *parse_source(struct parse_context *ctx);
 struct ast *parse_variables(struct parse_context *ctx);
@@ -14,9 +15,11 @@ struct ast *parse_statements(struct parse_context *ctx);
 struct ast *parse_assign(struct parse_context *ctx);
 struct ast *parse_input(struct parse_context *ctx);
 struct ast *parse_output(struct parse_context *ctx);
+struct ast *parse_branch(struct parse_context *ctx);
 struct ast *parse_expression(struct parse_context *ctx);
 struct ast *parse_term(struct parse_context *ctx);
 struct ast *parse_factor(struct parse_context *ctx);
+struct ast *parse_condition(struct parse_context *ctx);
 
 void parse_context_init(struct parse_context *ctx, FILE *source, struct symbol_table *st, struct error_list *errs)
 {
@@ -93,6 +96,18 @@ bool expect_token(struct parse_context *ctx, struct ast *tree, token_type_t type
 	return false;
 }
 
+bool expect_multiple_token(struct parse_context *ctx, struct ast *tree, token_type_t type, token_type_t expected)
+{
+	// check if the token type is one of expected types
+	if(accept_token(ctx, tree, expected))
+		return true;
+
+	// replace the token with the default token and report the syntax error
+	replace_token(ctx, tree, type, expected);
+
+	return false;
+}
+
 struct ast *parse_source(struct parse_context *ctx)
 {
 	struct ast *tree = ast_make_nonterminal(AST_NT_SOURCE);
@@ -132,7 +147,7 @@ struct ast *parse_statements(struct parse_context *ctx)
 {
 	struct ast *tree = ast_make_nonterminal(AST_NT_STATEMENTS);
 
-	while(!check_token(ctx, TOKEN_EOF | TOKEN_END))
+	while(!check_token(ctx, TOKEN_EOF | TOKEN_ELSE | TOKEN_END))
 	{
 		if(check_token(ctx, TOKEN_IDENTIFIER))
 		{
@@ -146,9 +161,9 @@ struct ast *parse_statements(struct parse_context *ctx)
 		{
 			ast_add_child(tree, parse_output(ctx));
 		}
-		else if(check_token(ctx, TOKEN_SEMICOLON))
+		else if(check_token(ctx, TOKEN_IF))
 		{
-			// nothing
+			ast_add_child(tree, parse_branch(ctx));
 		}
 		else
 		{
@@ -156,8 +171,6 @@ struct ast *parse_statements(struct parse_context *ctx)
 			next_token(ctx);
 			continue;
 		}
-
-		expect_token(ctx, tree, TOKEN_SEMICOLON);
 	}
 
 	return tree;
@@ -169,7 +182,10 @@ struct ast *parse_assign(struct parse_context *ctx)
 
 	expect_token(ctx, tree, TOKEN_IDENTIFIER);
 	expect_token(ctx, tree, TOKEN_ASSIGN);
+
 	ast_add_child(tree, parse_expression(ctx));
+
+	expect_token(ctx, tree, TOKEN_SEMICOLON);
 
 	return tree;
 }
@@ -180,6 +196,7 @@ struct ast *parse_input(struct parse_context *ctx)
 
 	expect_token(ctx, tree, TOKEN_READ);
 	expect_token(ctx, tree, TOKEN_IDENTIFIER);
+	expect_token(ctx, tree, TOKEN_SEMICOLON);
 
 	return tree;
 }
@@ -189,7 +206,33 @@ struct ast *parse_output(struct parse_context *ctx)
 	struct ast *tree = ast_make_nonterminal(AST_NT_OUTPUT);
 
 	expect_token(ctx, tree, TOKEN_WRITE);
+
 	ast_add_child(tree, parse_expression(ctx));
+
+	expect_token(ctx, tree, TOKEN_SEMICOLON);
+
+	return tree;
+}
+
+struct ast *parse_branch(struct parse_context *ctx)
+{
+	struct ast *tree = ast_make_nonterminal(AST_NT_BRANCH);
+
+	expect_token(ctx, tree, TOKEN_IF);
+	expect_token(ctx, tree, TOKEN_LPAREN);
+
+	ast_add_child(tree, parse_condition(ctx));
+
+	expect_token(ctx, tree, TOKEN_RPAREN);
+	expect_token(ctx, tree, TOKEN_BEGIN);
+
+	ast_add_child(tree, parse_statements(ctx));
+
+	expect_token(ctx, tree, TOKEN_ELSE);
+
+	ast_add_child(tree, parse_statements(ctx));
+
+	expect_token(ctx, tree, TOKEN_END);
 
 	return tree;
 }
@@ -240,6 +283,20 @@ struct ast *parse_factor(struct parse_context *ctx)
 			TOKEN_LITERAL | TOKEN_IDENTIFIER | TOKEN_PLUS | TOKEN_MINUS | TOKEN_LPAREN);
 		next_token(ctx);
 	}
+
+	return tree;
+}
+
+struct ast *parse_condition(struct parse_context *ctx)
+{
+	struct ast *tree = ast_make_nonterminal(AST_NT_CONDITION);
+
+	ast_add_child(tree, parse_expression(ctx));
+
+	expect_multiple_token(ctx, tree, TOKEN_EQ,
+		TOKEN_EQ | TOKEN_NEQ| TOKEN_LT | TOKEN_LTE | TOKEN_GT | TOKEN_GTE);
+
+	ast_add_child(tree, parse_expression(ctx));
 
 	return tree;
 }

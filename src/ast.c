@@ -39,7 +39,7 @@ void ast_clear(struct ast *tree)
 
 struct ast *ast_add_child(struct ast *tree, struct ast *child)
 {
-	tree->children = realloc(tree->children, (tree->children_cnt + 1) * sizeof(struct ast *));
+	tree->children = yrealloc(tree->children, (tree->children_cnt + 1) * sizeof(struct ast *));
 	tree->children[tree->children_cnt++] = child;
 
 	return child;

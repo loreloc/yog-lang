@@ -1,0 +1,16 @@
+
+var
+	x : int;
+	y : int;
+begin
+	read x;
+	
+	if(x < 0)
+	begin
+		y := -x;
+	else
+		y :=  x;
+	end
+
+	write y;
+end

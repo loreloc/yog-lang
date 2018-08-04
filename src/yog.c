@@ -41,15 +41,14 @@ int main(int argc, char* argv[])
 	semantic_context_init(&sem_ctx, &st, &errs, tree);
 
 	// analyse the abstract syntax tree
-	size_t tmp_cnt = 0;
-	struct instruction_list instrs = semantic_context_analyse(&sem_ctx, &tmp_cnt);
+	struct instruction_list instrs = semantic_context_analyse(&sem_ctx);
 
 	// check the error list
 	if(error_list_empty(errs))
 	{
 		// initialzie the interpreter
 		struct interpreter vm;
-		interpreter_init(&vm, instrs, tmp_cnt);
+		interpreter_init(&vm, instrs, sem_ctx.labels, sem_ctx.tmp_cnt);
 
 		// execute the instructions
 		interpreter_execute(&vm);
