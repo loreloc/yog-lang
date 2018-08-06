@@ -22,7 +22,7 @@ struct operand
 
 	union
 	{
-		/*! @brief The index of the temporary variable or the index of a label */
+		/*! @brief The index of the temporary variable or the index of an instruction */
 		size_t index;
 
 		/*! @brief The literal value */
@@ -69,19 +69,19 @@ struct instruction
 
 	/*! @brief The destination operand */
 	struct operand dest;
-
-	/*! @brief The next instruction */
-	struct instruction *next;
 };
 
 /*! @brief The instruction list */
 struct instruction_list
 {
-	/*! @brief The head of the list */
-	struct instruction *head;
+	/*! @brief The instruction list data */
+	struct instruction *data;
 
-	/*! @brief The tail of the list */
-	struct instruction *tail;
+	/*! @brief The number of instructions */
+	size_t size;
+
+	/*! @brief The capacity of the list */
+	size_t capacity;
 };
 
 /**
@@ -106,15 +106,7 @@ bool instruction_list_empty(struct instruction_list instrs);
 /**
  * @brief Add a new instruction to an instruction list
  * @param instrs A pointer to an instruction list
- * @param new_instr A pointer to the new instruction node
+ * @param new_instr The instruction to add
  */
-void instruction_list_add(struct instruction_list *instrs, struct instruction *new_instr);
-
-/**
- * @brief Merge two instruction list
- * @param instrs1 The first instruction list
- * @param instrs2 The second instruction list
- * @return The merged instruction list
- */
-struct instruction_list instruction_list_merge(struct instruction_list instrs1, struct instruction_list instrs2);
+void instruction_list_add(struct instruction_list *instrs, struct instruction new_instr);
 

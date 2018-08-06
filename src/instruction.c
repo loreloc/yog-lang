@@ -3,62 +3,32 @@
 
 void instruction_list_init(struct instruction_list *instrs)
 {
-	instrs->head = NULL;
-	instrs->tail = NULL;
+	instrs->data = NULL;
+	instrs->size = 0;
+	instrs->capacity = 0;
 }
 
 void instruction_list_clear(struct instruction_list *instrs)
 {
-	struct instruction *tmp;
-
-	while(instrs->head != NULL)
-	{
-		tmp = instrs->head;
-		instrs->head = tmp->next;
-		yfree(tmp);
-	}
-
-	instrs->tail = NULL;
+	yfree(instrs->data);
+	instrs->data = NULL;
+	instrs->size = 0;
+	instrs->capacity = 0;
 }
 
 bool instruction_list_empty(struct instruction_list instrs)
 {
-	return instrs.head == NULL;
+	return instrs.size == 0;
 }
 
-void instruction_list_add(struct instruction_list *instrs, struct instruction *new_instr)
+void instruction_list_add(struct instruction_list *instrs, struct instruction new_instr)
 {
-	if(instruction_list_empty(*instrs))
+	if(instrs->size >= instrs->capacity)
 	{
-		instrs->head = new_instr;
-		instrs->tail = new_instr;
+		instrs->capacity += 8;
+		instrs->data = yrealloc(instrs->data, instrs->capacity * sizeof(struct instruction));
 	}
-	else
-	{
-		instrs->tail->next = new_instr;
-		instrs->tail = new_instr;
-	}
-}
 
-struct instruction_list instruction_list_merge(struct instruction_list instrs1, struct instruction_list instrs2)
-{
-	if(instruction_list_empty(instrs1))
-	{
-		return instrs2;
-	}
-	else if(instruction_list_empty(instrs2))
-	{
-		return instrs1;
-	}
-	else
-	{
-		struct instruction_list instrs;
-
-		instrs.head = instrs1.head;
-		instrs.tail = instrs2.tail;
-		instrs1.tail->next = instrs2.head;
-
-		return instrs;
-	}
+	instrs->data[instrs->size++] = new_instr;
 }
 

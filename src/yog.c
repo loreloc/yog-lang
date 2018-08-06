@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
 	{
 		// initialzie the interpreter
 		struct interpreter vm;
-		interpreter_init(&vm, instrs, sem_ctx.labels, sem_ctx.tmp_cnt);
+		interpreter_init(&vm, instrs, sem_ctx.tmp_cnt);
 
 		// execute the instructions
 		interpreter_execute(&vm);

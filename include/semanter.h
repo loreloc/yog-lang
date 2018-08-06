@@ -5,7 +5,7 @@
 
 #include "ast.h"
 #include "error.h"
-#include "label.h"
+#include "instruction.h"
 
 /*! @brief The semantic context data structure */
 struct semantic_context
@@ -21,12 +21,6 @@ struct semantic_context
 
 	/*! @brief The instruction list of the current statement */
 	struct instruction_list instrs;
-
-	/*! @brief The number of labels */
-	size_t labels_cnt;
-
-	/*! @brief The array of labels */
-	label_t *labels;
 
 	/*! @brief The number of temporary variables */
 	size_t tmp_cnt;

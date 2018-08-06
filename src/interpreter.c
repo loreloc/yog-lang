@@ -19,31 +19,25 @@ int64_t operand_get_value(struct interpreter *vm, struct operand op)
 	}
 }
 
-void interpreter_init(struct interpreter *vm, struct instruction_list instrs, label_t *labels, size_t tmp_cnt)
+void interpreter_init(struct interpreter *vm, struct instruction_list instrs, size_t tmp_cnt)
 {
-	// set the label array
-	vm->labels = labels;
-
-	// allocate the temporary variables buffer
 	vm->temporary = ymalloc(tmp_cnt * sizeof(int64_t));
-
-	// initialize the instruction pointer
-	vm->ip = instrs.head;
+	vm->instrs = instrs;
+	vm->pc = 0;
 }
 
 void interpreter_clear(struct interpreter *vm)
 {
 	yfree(vm->temporary);
 	vm->temporary = NULL;
-
-	vm->ip = NULL;
+	vm->pc = 0;
 }
 
 void interpreter_execute(struct interpreter *vm)
 {
-	while(vm->ip)
+	while(vm->pc < vm->instrs.size)
 	{
-		struct instruction instr = *vm->ip;
+		struct instruction instr = vm->instrs.data[vm->pc];
 
 		// execute the instruction pointed by the instruction pointer
 		switch(instr.type)
@@ -110,14 +104,14 @@ void interpreter_execute(struct interpreter *vm)
 				break;
 
 			case INSTRUCTION_GOTO:
-				vm->ip = *vm->labels[instr.dest.index];
+				vm->pc = instr.dest.index;
 				continue;
 				break;
 
 			case INSTRUCTION_BRANCH:
 				if(vm->temporary[instr.src1.index])
 				{
-					vm->ip = *vm->labels[instr.dest.index];
+					vm->pc = instr.dest.index;
 					continue;
 				}
 				break;
@@ -127,7 +121,7 @@ void interpreter_execute(struct interpreter *vm)
 				break;
 		}
 
-		vm->ip = vm->ip->next;
+		vm->pc++;
 	}
 }
 

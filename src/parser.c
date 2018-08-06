@@ -16,6 +16,7 @@ struct ast *parse_assign(struct parse_context *ctx);
 struct ast *parse_input(struct parse_context *ctx);
 struct ast *parse_output(struct parse_context *ctx);
 struct ast *parse_branch(struct parse_context *ctx);
+struct ast *parse_loop(struct parse_context *ctx);
 struct ast *parse_expression(struct parse_context *ctx);
 struct ast *parse_term(struct parse_context *ctx);
 struct ast *parse_factor(struct parse_context *ctx);
@@ -165,6 +166,10 @@ struct ast *parse_statements(struct parse_context *ctx)
 		{
 			ast_add_child(tree, parse_branch(ctx));
 		}
+		else if(check_token(ctx, TOKEN_WHILE))
+		{
+			ast_add_child(tree, parse_loop(ctx));
+		}
 		else
 		{
 			report_syntactic_error(ctx, TOKEN_IDENTIFIER | TOKEN_READ | TOKEN_WRITE);
@@ -229,6 +234,26 @@ struct ast *parse_branch(struct parse_context *ctx)
 	ast_add_child(tree, parse_statements(ctx));
 
 	expect_token(ctx, tree, TOKEN_ELSE);
+
+	ast_add_child(tree, parse_statements(ctx));
+
+	expect_token(ctx, tree, TOKEN_END);
+
+	return tree;
+}
+
+struct ast *parse_loop(struct parse_context *ctx)
+{
+	struct ast *tree = ast_make_nonterminal(AST_NT_LOOP);
+
+	expect_token(ctx, tree, TOKEN_WHILE);
+	expect_token(ctx, tree, TOKEN_LPAREN);
+
+	ast_add_child(tree, parse_condition(ctx));
+
+	expect_token(ctx, tree, TOKEN_RPAREN);
+
+	expect_token(ctx, tree, TOKEN_BEGIN);
 
 	ast_add_child(tree, parse_statements(ctx));
 

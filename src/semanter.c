@@ -3,15 +3,15 @@
 
 size_t next_temporary(struct semantic_context *ctx);
 bool accept_variable(struct semantic_context *ctx, struct token tok);
-size_t push_label(struct semantic_context *ctx, struct instruction **instr);
 
 void analyse_variables(struct semantic_context *ctx, struct ast *variables);
-struct instruction_list analyse_statements(struct semantic_context *ctx, struct ast *statements);
+void analyse_statements(struct semantic_context *ctx, struct ast *statements);
 
-struct instruction_list analyse_assign(struct semantic_context *ctx, struct ast *assign);
-struct instruction_list analyse_input(struct semantic_context *ctx, struct ast *input);
-struct instruction_list analyse_output(struct semantic_context *ctx, struct ast *output);
-struct instruction_list analyse_branch(struct semantic_context *ctx, struct ast *branch);
+void analyse_assign(struct semantic_context *ctx, struct ast *assign);
+void analyse_input(struct semantic_context *ctx, struct ast *input);
+void analyse_output(struct semantic_context *ctx, struct ast *output);
+void analyse_branch(struct semantic_context *ctx, struct ast *branch);
+void analyse_loop(struct semantic_context *ctx, struct ast *loop);
 
 struct operand analyse_expression(struct semantic_context *ctx, struct ast *expression);
 struct operand analyse_term(struct semantic_context *ctx, struct ast *term);
@@ -24,11 +24,7 @@ void semantic_context_init(struct semantic_context *ctx, struct symbol_table *st
 	ctx->errs = errs;
 	ctx->tree = tree;
 
-	ctx->instrs.head = NULL;
-	ctx->instrs.tail = NULL;
-
-	ctx->labels_cnt = 0;
-	ctx->labels = NULL;
+	instruction_list_init(&ctx->instrs);
 
 	ctx->tmp_cnt = 0;
 }
@@ -39,7 +35,9 @@ struct instruction_list semantic_context_analyse(struct semantic_context *ctx)
 	analyse_variables(ctx, ctx->tree->children[1]);
 
 	// analyse the statements and produce the instructio nlist
-	return analyse_statements(ctx, ctx->tree->children[3]);
+	analyse_statements(ctx, ctx->tree->children[3]);
+
+	return ctx->instrs;
 }
 
 size_t next_temporary(struct semantic_context *ctx)
@@ -57,14 +55,6 @@ bool accept_variable(struct semantic_context *ctx, struct token tok)
 	}
 
 	return true;
-}
-
-size_t push_label(struct semantic_context *ctx, struct instruction **instr)
-{
-	ctx->labels = yrealloc(ctx->labels, (ctx->labels_cnt + 1) * sizeof(label_t));
-	ctx->labels[ctx->labels_cnt] = instr;
-
-	return ctx->labels_cnt++;
 }
 
 void analyse_variables(struct semantic_context *ctx, struct ast *variables)
@@ -93,11 +83,8 @@ void analyse_variables(struct semantic_context *ctx, struct ast *variables)
 	}
 }
 
-struct instruction_list analyse_statements(struct semantic_context *ctx, struct ast *statements)
+void analyse_statements(struct semantic_context *ctx, struct ast *statements)
 {
-	struct instruction_list instrs;
-	instruction_list_init(&instrs);
-
 	for(size_t i = 0; i < statements->children_cnt; i++)
 	{
 		struct ast *stmt = statements->children[i];
@@ -105,134 +92,134 @@ struct instruction_list analyse_statements(struct semantic_context *ctx, struct 
 		switch(stmt->nt)
 		{
 			case AST_NT_ASSIGN:
-				instrs = instruction_list_merge(instrs, analyse_assign(ctx, stmt));
+				analyse_assign(ctx, stmt);
 				break;
 
 			case AST_NT_INPUT:
-				instrs = instruction_list_merge(instrs, analyse_input(ctx, stmt));
+				analyse_input(ctx, stmt);
 				break;
 
 			case AST_NT_OUTPUT:
-				instrs = instruction_list_merge(instrs, analyse_output(ctx, stmt));
+				analyse_output(ctx, stmt);
 				break;
 
 			case AST_NT_BRANCH:
-				instrs = instruction_list_merge(instrs, analyse_branch(ctx, stmt));
+				analyse_branch(ctx, stmt);
+				break;
+
+			case AST_NT_LOOP:
+				analyse_loop(ctx, stmt);
 				break;
 
 			default:
 				yassert(false, "unknow nonterminal");
 				break;
 		}
-
-		instruction_list_init(&ctx->instrs);
 	}
-
-	return instrs;
 }
 
-struct instruction_list analyse_assign(struct semantic_context *ctx, struct ast *assign)
+void analyse_assign(struct semantic_context *ctx, struct ast *assign)
 {
-	struct instruction_list instrs;
-	instruction_list_init(&instrs);
-
 	struct token id_tok = assign->children[0]->tok;
 	
 	if(id_tok.sym != NULL)
 	{
 		if(accept_variable(ctx, id_tok))
 		{
-			struct instruction *instr = ymalloc(sizeof(struct instruction));
+			struct instruction instr;
+			instr.type = INSTRUCTION_ASSIGN;
+			instr.dest.type = OPERAND_SYMBOL;
+			instr.dest.sym = id_tok.sym;
+			instr.src1 = analyse_expression(ctx, assign->children[2]);
 
-			instr->type = INSTRUCTION_ASSIGN;
-			instr->dest.type = OPERAND_SYMBOL;
-			instr->dest.sym = id_tok.sym;
-			instr->src1 = analyse_expression(ctx, assign->children[2]);
-			instr->next = NULL;
-
-			instrs = ctx->instrs;
-			instruction_list_add(&instrs, instr);
+			instruction_list_add(&ctx->instrs, instr);
 		}
 	}
-
-	return instrs;
 }
 
-struct instruction_list analyse_input(struct semantic_context *ctx, struct ast *input)
+void analyse_input(struct semantic_context *ctx, struct ast *input)
 {
-	struct instruction_list instrs;
-	instruction_list_init(&instrs);
-
 	struct token id_tok = input->children[1]->tok;
 
 	if(id_tok.sym != NULL)
 	{
 		if(accept_variable(ctx, id_tok))
 		{
-			struct instruction *instr = ymalloc(sizeof(struct instruction));
+			struct instruction instr;
+			instr.type = INSTRUCTION_READ;
+			instr.dest.type = OPERAND_SYMBOL;
+			instr.dest.sym = id_tok.sym;
 
-			instr->type = INSTRUCTION_READ;
-			instr->dest.type = OPERAND_SYMBOL;
-			instr->dest.sym = id_tok.sym;
-			instr->next = NULL;
-
-			instruction_list_add(&instrs, instr);
+			instruction_list_add(&ctx->instrs, instr);
 		}
 	}
-
-	return instrs;
 }
 
-struct instruction_list analyse_output(struct semantic_context *ctx, struct ast *output)
+void analyse_output(struct semantic_context *ctx, struct ast *output)
 {
-	struct instruction_list instrs;
-	instruction_list_init(&instrs);
+	struct instruction instr;
+	instr.type = INSTRUCTION_WRITE;
+	instr.src1 = analyse_expression(ctx, output->children[1]);
 
-	struct instruction *instr = ymalloc(sizeof(struct instruction));
-
-	instr->type = INSTRUCTION_WRITE;
-	instr->src1 = analyse_expression(ctx, output->children[1]);
-	instr->next = NULL;
-
-	instrs = ctx->instrs;
-	instruction_list_add(&instrs, instr);
-
-	return instrs;
+	instruction_list_add(&ctx->instrs, instr);
 }
 
-struct instruction_list analyse_branch(struct semantic_context *ctx, struct ast *branch)
+void analyse_branch(struct semantic_context *ctx, struct ast *branch)
 {
-	struct instruction_list instrs;
-	instruction_list_init(&instrs);
+	struct instruction branch_instr;
+	branch_instr.type = INSTRUCTION_BRANCH;
+	branch_instr.src1 = analyse_condition(ctx, branch->children[2]);
+	branch_instr.dest.type = OPERAND_LABEL;
+	instruction_list_add(&ctx->instrs, branch_instr);
 
-	struct instruction_list if_branch   = analyse_statements(ctx, branch->children[5]);
-	struct instruction_list else_branch = analyse_statements(ctx, branch->children[7]);
+	struct instruction *branch_instr_ptr = &ctx->instrs.data[ctx->instrs.size - 1];
 
-	struct instruction *goto_instr = ymalloc(sizeof(struct instruction));
-	goto_instr->type = INSTRUCTION_GOTO;
-	goto_instr->dest.type = OPERAND_LABEL;
+	analyse_statements(ctx, branch->children[7]);
 
-	if(instruction_list_empty(if_branch))
-		goto_instr->dest.index = push_label(ctx, &goto_instr->next);
-	else
-		goto_instr->dest.index = push_label(ctx, &if_branch.tail->next);
+	struct instruction goto_instr;
+	goto_instr.type = INSTRUCTION_GOTO;
+	goto_instr.dest.type = OPERAND_LABEL;
+	instruction_list_add(&ctx->instrs, goto_instr);
 
-	goto_instr->next = NULL;
+	struct instruction *goto_instr_ptr = &ctx->instrs.data[ctx->instrs.size - 1];
 
-	struct instruction *branch_instr = ymalloc(sizeof(struct instruction));
-	branch_instr->type = INSTRUCTION_BRANCH;
-	branch_instr->src1 = analyse_condition(ctx, branch->children[2]);
-	branch_instr->dest.type = OPERAND_LABEL;
-	branch_instr->dest.index = push_label(ctx, &goto_instr->next);
-	branch_instr->next = NULL;
+	branch_instr_ptr->dest.index = ctx->instrs.size;
 
-	instrs = ctx->instrs;
-	instruction_list_add(&instrs, branch_instr);
-	instrs = instruction_list_merge(instrs, else_branch);
-	instruction_list_add(&instrs, goto_instr);
-	instrs = instruction_list_merge(instrs, if_branch);
+	analyse_statements(ctx, branch->children[5]);
 
-	return instrs;
+	goto_instr_ptr->dest.index = ctx->instrs.size;
+}
+
+void analyse_loop(struct semantic_context *ctx, struct ast *loop)
+{
+	size_t start_label = ctx->instrs.size;
+
+	struct instruction branch_instr;
+	branch_instr.type = INSTRUCTION_BRANCH;
+	branch_instr.src1 = analyse_condition(ctx, loop->children[2]);
+	branch_instr.dest.type = OPERAND_LABEL;
+	instruction_list_add(&ctx->instrs, branch_instr);
+
+	struct instruction *branch_instr_ptr = &ctx->instrs.data[ctx->instrs.size - 1];
+
+	struct instruction exit_instr;
+	exit_instr.type = INSTRUCTION_GOTO;
+	exit_instr.dest.type = OPERAND_LABEL;
+	instruction_list_add(&ctx->instrs, exit_instr);
+
+	struct instruction *exit_instr_ptr = &ctx->instrs.data[ctx->instrs.size - 1];
+
+	branch_instr_ptr->dest.index = ctx->instrs.size;
+
+	analyse_statements(ctx, loop->children[5]);
+
+	struct instruction goto_instr;
+	goto_instr.type = INSTRUCTION_GOTO;
+	goto_instr.dest.type = OPERAND_LABEL;
+	goto_instr.dest.index = start_label;
+	instruction_list_add(&ctx->instrs, goto_instr);
+
+	exit_instr_ptr->dest.index = ctx->instrs.size;
 }
 
 struct operand analyse_expression(struct semantic_context *ctx, struct ast *expression)
@@ -243,22 +230,21 @@ struct operand analyse_expression(struct semantic_context *ctx, struct ast *expr
 	{
 		struct operand opd2 = analyse_term(ctx, expression->children[i+1]);
 
-		struct instruction *instr = ymalloc(sizeof(struct instruction));
+		struct instruction instr;
 
 		if(expression->children[i]->tok.type == TOKEN_PLUS)
-			instr->type = INSTRUCTION_ADD;
+			instr.type = INSTRUCTION_ADD;
 		else
-			instr->type = INSTRUCTION_SUB;
+			instr.type = INSTRUCTION_SUB;
 
-		instr->dest.type = OPERAND_TEMPORARY;
-		instr->dest.index = next_temporary(ctx);
-		instr->src1 = opd1;
-		instr->src2 = opd2;
-		instr->next = NULL;
+		instr.dest.type = OPERAND_TEMPORARY;
+		instr.dest.index = next_temporary(ctx);
+		instr.src1 = opd1;
+		instr.src2 = opd2;
 
 		instruction_list_add(&ctx->instrs, instr);
 
-		opd1 = instr->dest;
+		opd1 = instr.dest;
 	}
 
 	return opd1;
@@ -272,22 +258,21 @@ struct operand analyse_term(struct semantic_context *ctx, struct ast *term)
 	{
 		struct operand opd2 = analyse_factor(ctx, term->children[i+1]);
 
-		struct instruction *instr = ymalloc(sizeof(struct instruction));
+		struct instruction instr;
 
 		if(term->children[i]->tok.type == TOKEN_MUL)
-			instr->type = INSTRUCTION_MUL;
+			instr.type = INSTRUCTION_MUL;
 		else
-			instr->type = INSTRUCTION_DIV;
+			instr.type = INSTRUCTION_DIV;
 
-		instr->dest.type = OPERAND_TEMPORARY;
-		instr->dest.index = next_temporary(ctx);
-		instr->src1 = opd1;
-		instr->src2 = opd2;
-		instr->next = NULL;
+		instr.dest.type = OPERAND_TEMPORARY;
+		instr.dest.index = next_temporary(ctx);
+		instr.src1 = opd1;
+		instr.src2 = opd2;
 
 		instruction_list_add(&ctx->instrs, instr);
 
-		opd1 = instr->dest;
+		opd1 = instr.dest;
 	}
 
 	return opd1;
@@ -296,7 +281,8 @@ struct operand analyse_term(struct semantic_context *ctx, struct ast *term)
 struct operand analyse_factor(struct semantic_context *ctx, struct ast *factor)
 {
 	struct operand opd;
-	struct instruction *instr;
+	struct instruction instr;
+
 	struct token tok = factor->children[0]->tok;
 
 	switch(tok.type)
@@ -318,25 +304,21 @@ struct operand analyse_factor(struct semantic_context *ctx, struct ast *factor)
 			break;
 
 		case TOKEN_PLUS:
-			instr = ymalloc(sizeof(struct instruction));
-			instr->type = INSTRUCTION_PLS;
-			instr->src1 = analyse_factor(ctx, factor->children[1]);
-			instr->dest.type = OPERAND_TEMPORARY;
-			instr->dest.index = next_temporary(ctx);
-			instr->next = NULL;
+			instr.type = INSTRUCTION_PLS;
+			instr.src1 = analyse_factor(ctx, factor->children[1]);
+			instr.dest.type = OPERAND_TEMPORARY;
+			instr.dest.index = next_temporary(ctx);
 			instruction_list_add(&ctx->instrs, instr);
-			opd = instr->dest;
+			opd = instr.dest;
 			break;
 
 		case TOKEN_MINUS:
-			instr = ymalloc(sizeof(struct instruction));
-			instr->type = INSTRUCTION_NEG;
-			instr->src1 = analyse_factor(ctx, factor->children[1]);
-			instr->dest.type = OPERAND_TEMPORARY;
-			instr->dest.index = next_temporary(ctx);
-			instr->next = NULL;
+			instr.type = INSTRUCTION_NEG;
+			instr.src1 = analyse_factor(ctx, factor->children[1]);
+			instr.dest.type = OPERAND_TEMPORARY;
+			instr.dest.index = next_temporary(ctx);
 			instruction_list_add(&ctx->instrs, instr);
-			opd = instr->dest;
+			opd = instr.dest;
 			break;
 
 		case TOKEN_LPAREN:
@@ -353,38 +335,36 @@ struct operand analyse_factor(struct semantic_context *ctx, struct ast *factor)
 
 struct operand analyse_condition(struct semantic_context *ctx, struct ast *condition)
 {
-	struct instruction *instr = ymalloc(sizeof(struct instruction));
-
-	instr->src1 = analyse_expression(ctx, condition->children[0]);
-	instr->src2 = analyse_expression(ctx, condition->children[2]);
-	instr->dest.type = OPERAND_TEMPORARY;
-	instr->dest.index = next_temporary(ctx);
-	instr->next = NULL;
+	struct instruction instr;
+	instr.src1 = analyse_expression(ctx, condition->children[0]);
+	instr.src2 = analyse_expression(ctx, condition->children[2]);
+	instr.dest.type = OPERAND_TEMPORARY;
+	instr.dest.index = next_temporary(ctx);
 
 	switch(condition->children[1]->tok.type)
 	{
 		case TOKEN_EQ:
-			instr->type = INSTRUCTION_EQ;
+			instr.type = INSTRUCTION_EQ;
 			break;
 
 		case TOKEN_NEQ:
-			instr->type = INSTRUCTION_NEQ;
+			instr.type = INSTRUCTION_NEQ;
 			break;
 
 		case TOKEN_LT:
-			instr->type = INSTRUCTION_LT;
+			instr.type = INSTRUCTION_LT;
 			break;
 
 		case TOKEN_LTE:
-			instr->type = INSTRUCTION_LTE;
+			instr.type = INSTRUCTION_LTE;
 			break;
 
 		case TOKEN_GT:
-			instr->type = INSTRUCTION_GT;
+			instr.type = INSTRUCTION_GT;
 			break;
 
 		case TOKEN_GTE:
-			instr->type = INSTRUCTION_GTE;
+			instr.type = INSTRUCTION_GTE;
 			break;
 
 		default:
@@ -395,6 +375,6 @@ struct operand analyse_condition(struct semantic_context *ctx, struct ast *condi
 	// add the condition to the instruction list
 	instruction_list_add(&ctx->instrs, instr);
 
-	return instr->dest;
+	return instr.dest;
 }
 

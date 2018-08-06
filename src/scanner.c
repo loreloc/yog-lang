@@ -306,6 +306,8 @@ struct token make_token_word(char *text, struct symbol_table *st, struct locatio
 		tok.type = TOKEN_IF;
 	else if(strcmp(text, "else") == 0)
 		tok.type = TOKEN_ELSE;
+	else if(strcmp(text, "while") == 0)
+		tok.type = TOKEN_WHILE;
 	else
 	{
 		tok.type = TOKEN_IDENTIFIER;

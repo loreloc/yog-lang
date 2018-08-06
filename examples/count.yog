@@ -1,0 +1,13 @@
+
+var
+	i : int;
+begin
+	i := 0;
+	
+	while(i < 10)
+	begin
+		write i;
+		i := i + 1;
+	end
+end
+

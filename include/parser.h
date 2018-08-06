@@ -40,7 +40,7 @@ void parse_context_init(struct parse_context *ctx, FILE *source, struct symbol_t
  * 
  * variables = { "identifier" ":" "int" ";" }
  * 
- * statements = { [ assign | input | output | branch ] }
+ * statements = { [ assign | input | output | branch | loop ] }
  * 
  * assign = "identifier" "=" expression ";"
  * 
@@ -49,6 +49,8 @@ void parse_context_init(struct parse_context *ctx, FILE *source, struct symbol_t
  * output = "write" expression ";"
  * 
  * branch = "if" "(" condition ")" "begin" statements "else" statements "end"
+ * 
+ * loop = "while" "(" condition ")" "begin" statements "end"
  * 
  * expression = term { ( "+" | "-" ) term }
  * 
