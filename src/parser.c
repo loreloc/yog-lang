@@ -172,7 +172,7 @@ struct ast *parse_statements(struct parse_context *ctx)
 		}
 		else
 		{
-			report_syntactic_error(ctx, TOKEN_IDENTIFIER | TOKEN_READ | TOKEN_WRITE);
+			report_syntactic_error(ctx, TOKEN_IDENTIFIER | TOKEN_READ | TOKEN_WRITE | TOKEN_IF | TOKEN_WHILE);
 			next_token(ctx);
 			continue;
 		}
