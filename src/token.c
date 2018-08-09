@@ -5,6 +5,10 @@ const char *token_type_str(token_type_t type)
 {
 	int64_t type_index;
 
+	// the token types are power of two
+	// so calculate the integer log2 of type
+	// in order to consent the compiler to
+	// optimize the switch with a jump table
 	__asm__
 	(
 		"bsr %1, %0\n\t"

@@ -99,7 +99,7 @@ void instruction_list_clear(struct instruction_list *instrs);
 /**
  * @brief Check if an instruction list is empty
  * @param instrs The instruction list to check
- * @return ture if the instruction list is empty, false otherwise
+ * @return true if the instruction list is empty, false otherwise
  */
 bool instruction_list_empty(struct instruction_list instrs);
 

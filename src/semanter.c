@@ -31,10 +31,7 @@ void semantic_context_init(struct semantic_context *ctx, struct symbol_table *st
 
 struct instruction_list semantic_context_analyse(struct semantic_context *ctx)
 {
-	// analyse the variables and update the symbol table
 	analyse_variables(ctx, ctx->tree->children[1]);
-
-	// analyse the statements and produce the instructio nlist
 	analyse_statements(ctx, ctx->tree->children[3]);
 
 	return ctx->instrs;
@@ -372,7 +369,6 @@ struct operand analyse_condition(struct semantic_context *ctx, struct ast *condi
 			break;
 	}
 
-	// add the condition to the instruction list
 	instruction_list_add(&ctx->instrs, instr);
 
 	return instr.dest;

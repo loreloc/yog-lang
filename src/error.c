@@ -84,7 +84,7 @@ void error_list_show(struct error_list errs)
 
 	while(tmp != NULL)
 	{
-		printf("(%lu) %lu, %lu - ", index, tmp->loc.row, tmp->loc.col);
+		printf("(%zu) %zu, %zu - ", index, tmp->loc.row, tmp->loc.col);
 
 		switch(tmp->type)
 		{

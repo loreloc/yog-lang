@@ -23,6 +23,7 @@ bool instruction_list_empty(struct instruction_list instrs)
 
 void instruction_list_add(struct instruction_list *instrs, struct instruction new_instr)
 {
+	// enlarge the buffer capacity if necessary
 	if(instrs->size >= instrs->capacity)
 	{
 		instrs->capacity += 8;

@@ -13,7 +13,6 @@ int main(int argc, char* argv[])
 
 	const char *filename = argv[1];
 
-	// open the source file
 	FILE *source = fopen(filename, "r");
 	if(!source)
 	{
@@ -21,39 +20,33 @@ int main(int argc, char* argv[])
 		return 2;
 	}
 
-	// initialize the error handler
 	struct error_list errs;
 	error_list_init(&errs);
 
-	// initialize the symbol table
 	struct symbol_table st;
 	symbol_table_init(&st);
 
-	// initialize the parse context
 	struct parse_context ctx;
 	parse_context_init(&ctx, source, &st, &errs);
 
-	// parse the source code
+	// parse the source code and obtain the abstract syntax tree
 	struct ast *tree = parse(&ctx);
 
-	// initialize the semantic analysis context
 	struct semantic_context sem_ctx;
 	semantic_context_init(&sem_ctx, &st, &errs, tree);
 
-	// analyse the abstract syntax tree
+	// analyse the abstract syntax tree and obtain the instruction list
 	struct instruction_list instrs = semantic_context_analyse(&sem_ctx);
 
-	// check the error list
+	// check if a compile-time error has been occured
 	if(error_list_empty(errs))
 	{
-		// initialzie the interpreter
 		struct interpreter vm;
 		interpreter_init(&vm, instrs, sem_ctx.tmp_cnt);
 
 		// execute the instructions
 		interpreter_execute(&vm);
 
-		// clear the interpreter
 		interpreter_clear(&vm);
 	}
 	else

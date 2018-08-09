@@ -41,7 +41,7 @@ void symbol_table_show(struct symbol_table st)
 {
 	for(size_t i = 0; i < st.buckets_cnt; ++i)
 	{
-		printf("(%lu) ", i);
+		printf("(%zu) ", i);
 
 		const struct symbol *tmp = st.buckets[i];
 		while(tmp != NULL)
@@ -67,10 +67,8 @@ void symbol_table_show(struct symbol_table st)
 
 struct symbol *symbol_table_find(struct symbol_table st, const char* id)
 {
-	// calculate the bucket index
 	const uint8_t index = hash_str(id) & (st.buckets_cnt - 1);
 
-	// find the symbol in the bucket
 	struct symbol *tmp = st.buckets[index];
 	while(tmp != NULL)
 	{
@@ -85,17 +83,14 @@ struct symbol *symbol_table_find(struct symbol_table st, const char* id)
 
 struct symbol *symbol_table_add(struct symbol_table *st, const char* id)
 {
-	// allocate the new symbol node
 	struct symbol *sym = ymalloc(sizeof(struct symbol));
 	sym->type = SYMBOL_UNKNOW;
 	sym->loc.row = 0;
 	sym->loc.col = 0;
 	strcpy(sym->id, id);
 
-	// calculate the bucket index
 	uint8_t index = hash_str(id) & (st->buckets_cnt - 1);
 
-	// add the new symbol node in the bucket
 	sym->next = st->buckets[index];
 	st->buckets[index] = sym;
 	st->symbols_cnt++;
@@ -103,7 +98,7 @@ struct symbol *symbol_table_add(struct symbol_table *st, const char* id)
 	// calculate the symbol table weight
 	double weight = (double)st->symbols_cnt / st->buckets_cnt;
 
-	// check if the weight is too much
+	// check if the weight is too much and rehash if necessary
 	if(weight > 0.75 && st->buckets_cnt < ST_BUCKETS_MAX)
 		rehash(st, 2 * st->buckets_cnt);
 
@@ -151,11 +146,7 @@ void rehash(struct symbol_table *st, size_t cnt)
 
 	// allocate the bucket array of the new symbol table
 	new_st.buckets_cnt = cnt;
-	new_st.buckets = ymalloc(new_st.buckets_cnt * sizeof(struct symbol *));
-
-	// initialize the symbol lists of the buckets
-	for(size_t i = 0; i < new_st.buckets_cnt; ++i)
-		new_st.buckets[i] = NULL;
+	new_st.buckets = ycalloc(new_st.buckets_cnt, sizeof(struct symbol *));
 
 	// move the symbols from the old symbol table to the new symbol table
 	for(size_t i = 0; i < st->buckets_cnt; ++i)
@@ -164,13 +155,10 @@ void rehash(struct symbol_table *st, size_t cnt)
 
 		while(tmp != NULL)
 		{
-			// save the pointer to the next symbol
 			struct symbol *tmp_next = tmp->next;
 
-			// calculate the new bucket index
 			uint8_t index = hash_str(tmp->id) & (new_st.buckets_cnt - 1);
 
-			// add the new symbol node in the bucket
 			tmp->next = new_st.buckets[index];
 			new_st.buckets[index] = tmp;
 
@@ -178,9 +166,9 @@ void rehash(struct symbol_table *st, size_t cnt)
 		}
 	}
 
-	// set the number of symbols of the new symbol table
 	new_st.symbols_cnt = st->symbols_cnt;
 
+	// update the old symbol table
 	*st = new_st;
 }
 

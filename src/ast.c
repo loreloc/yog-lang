@@ -30,7 +30,6 @@ void ast_clear(struct ast *tree)
 	if(tree == NULL)
 		return;
 
-	// clear the child trees
 	for(size_t i = 0; i < tree->children_cnt; ++i)
 		ast_clear(tree->children[i]);
 

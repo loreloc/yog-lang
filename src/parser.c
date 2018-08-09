@@ -24,7 +24,6 @@ struct ast *parse_condition(struct parse_context *ctx);
 
 void parse_context_init(struct parse_context *ctx, FILE *source, struct symbol_table *st, struct error_list *errs)
 {
-	// initialize the lexical context
 	lex_context_init(&ctx->lex_ctx, source, st, errs);
 
 	ctx->errs = errs;
@@ -40,20 +39,18 @@ struct ast *parse(struct parse_context *ctx)
 
 void report_syntactic_error(struct parse_context *ctx, token_type_t expected)
 {
-	// add a new syntactic error to the error list
-	error_list_add(ctx->errs, error_make_unexpected_token(ctx->curr_tok.loc, ctx->curr_tok.type, expected));
+	error_list_add(ctx->errs, error_make_unexpected_token(ctx->tok.loc, ctx->tok.type, expected));
 }
 
 void next_token(struct parse_context *ctx)
 {
-	// save the current token and get the next token
-	ctx->prev_tok = ctx->curr_tok;
-	ctx->curr_tok = lex(&ctx->lex_ctx);
+	ctx->tok = lex(&ctx->lex_ctx);
 }
 
 bool check_token(struct parse_context *ctx, token_type_t types)
 {
-	return ctx->curr_tok.type & types;
+	// check if the token is one of types
+	return ctx->tok.type & types;
 }
 
 bool accept_token(struct parse_context *ctx, struct ast *tree, token_type_t types)
@@ -62,7 +59,7 @@ bool accept_token(struct parse_context *ctx, struct ast *tree, token_type_t type
 	if(check_token(ctx, types))
 	{
 		// add a new token child to the abstract syntax tree node
-		ast_add_child(tree, ast_make_terminal(ctx->curr_tok));
+		ast_add_child(tree, ast_make_terminal(ctx->tok));
 		next_token(ctx);
 		return true;
 	}
@@ -74,7 +71,7 @@ void replace_token(struct parse_context *ctx, struct ast *tree, token_type_t typ
 {
 	// initialize the error recovering token
 	struct token tok;
-	tok.loc = ctx->curr_tok.loc;
+	tok.loc = ctx->tok.loc;
 	tok.type = type;
 	tok.sym = NULL;
 
