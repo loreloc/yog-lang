@@ -339,6 +339,10 @@ struct token make_token_word(char *text, struct symbol_table *st, struct locatio
 		tok.type = TOKEN_ELSE;
 	else if(strcmp(text, "while") == 0)
 		tok.type = TOKEN_WHILE;
+	else if(strcmp(text, "repeat") == 0)
+		tok.type = TOKEN_REPEAT;
+	else if(strcmp(text, "until") == 0)
+		tok.type = TOKEN_UNTIL;
 	else
 	{
 		tok.type = TOKEN_IDENTIFIER;

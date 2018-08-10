@@ -37,7 +37,7 @@ void parse_context_init(struct parse_context *ctx, FILE *source, struct symbol_t
  * 
  * variables = { "identifier" ":" "int" ";" }
  * 
- * statements = { [ assign | input | output | branch | loop ] }
+ * statements = { [ assign | input | output | branch | loop | repeat ] }
  * 
  * assign = "identifier" "=" expression ";"
  * 
@@ -49,6 +49,8 @@ void parse_context_init(struct parse_context *ctx, FILE *source, struct symbol_t
  * 
  * loop = "while" "(" condition ")" "begin" statements "end"
  * 
+ * repeat = "repeat" statements "until" "(" condition ")"
+ * 
  * expression = term { ( "+" | "-" ) term }
  * 
  * term = factor { ( "*" | "/" ) factor }
@@ -59,7 +61,6 @@ void parse_context_init(struct parse_context *ctx, FILE *source, struct symbol_t
  *          | "(" <expression> ")"
  *
  * condition = expression ( "=" | "<>" | "<" | "<=" | ">" | ">=" ) expression
- *
  * ```
  * @param ctx A pointer to the parse context
  * @return The abstract syntax tree of the source code

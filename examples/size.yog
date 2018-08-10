@@ -1,0 +1,12 @@
+
+var
+	size : int;
+begin
+	repeat
+		read size;
+	until(size <= 0)
+
+	write size;
+end
+
+

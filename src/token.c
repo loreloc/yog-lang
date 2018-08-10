@@ -61,16 +61,20 @@ const char *token_type_str(token_type_t type)
 		case 20:
 			return "while";
 		case 21:
-			return "=";
+			return "repeat";
 		case 22:
-			return "<>";
+			return "until";
 		case 23:
-			return "<";
+			return "=";
 		case 24:
-			return "<=";
+			return "<>";
 		case 25:
-			return ">";
+			return "<";
 		case 26:
+			return "<=";
+		case 27:
+			return ">";
+		case 28:
 			return ">=";
 		default:
 			return NULL;

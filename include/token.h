@@ -26,12 +26,14 @@
 #define TOKEN_IF         (1ull << 18)
 #define TOKEN_ELSE       (1ull << 19)
 #define TOKEN_WHILE      (1ull << 20)
-#define TOKEN_EQ         (1ull << 21)
-#define TOKEN_NEQ        (1ull << 22)
-#define TOKEN_LT         (1ull << 23)
-#define TOKEN_LTE        (1ull << 24)
-#define TOKEN_GT         (1ull << 25)
-#define TOKEN_GTE        (1ull << 26)
+#define TOKEN_REPEAT     (1ull << 21)
+#define TOKEN_UNTIL      (1ull << 22)
+#define TOKEN_EQ         (1ull << 23)
+#define TOKEN_NEQ        (1ull << 24)
+#define TOKEN_LT         (1ull << 25)
+#define TOKEN_LTE        (1ull << 26)
+#define TOKEN_GT         (1ull << 27)
+#define TOKEN_GTE        (1ull << 28)
 #define TOKEN_TYPE_MAX   TOKEN_GTE
 
 /*! @brief The token type */

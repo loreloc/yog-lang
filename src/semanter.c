@@ -12,6 +12,7 @@ void analyse_input(struct semantic_context *ctx, struct ast *input);
 void analyse_output(struct semantic_context *ctx, struct ast *output);
 void analyse_branch(struct semantic_context *ctx, struct ast *branch);
 void analyse_loop(struct semantic_context *ctx, struct ast *loop);
+void analyse_repeat(struct semantic_context *ctx, struct ast *repeat);
 
 struct operand analyse_expression(struct semantic_context *ctx, struct ast *expression);
 struct operand analyse_term(struct semantic_context *ctx, struct ast *term);
@@ -106,6 +107,10 @@ void analyse_statements(struct semantic_context *ctx, struct ast *statements)
 
 			case AST_NT_LOOP:
 				analyse_loop(ctx, stmt);
+				break;
+
+			case AST_NT_REPEAT:
+				analyse_repeat(ctx, stmt);
 				break;
 
 			default:
@@ -217,6 +222,21 @@ void analyse_loop(struct semantic_context *ctx, struct ast *loop)
 	instruction_list_add(&ctx->instrs, goto_instr);
 
 	exit_instr_ptr->dest.index = ctx->instrs.size;
+}
+
+void analyse_repeat(struct semantic_context *ctx, struct ast *repeat)
+{
+	size_t start_label = ctx->instrs.size;
+
+	analyse_statements(ctx, repeat->children[1]);
+
+	struct instruction branch_instr;
+	branch_instr.type = INSTRUCTION_BRANCH;
+	branch_instr.src1 = analyse_condition(ctx, repeat->children[4]);
+	branch_instr.dest.type = OPERAND_LABEL;
+	branch_instr.dest.index = start_label;
+
+	instruction_list_add(&ctx->instrs, branch_instr);
 }
 
 struct operand analyse_expression(struct semantic_context *ctx, struct ast *expression)
