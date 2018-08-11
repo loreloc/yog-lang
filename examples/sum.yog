@@ -1,12 +1,21 @@
 
+# the variables declaration #
 var
-	a : int;
-	b : int;
-	c : int;
+	a : int; # the first number  #
+	b : int; # the second number #
+	c : int; # the third number  #
+
+# the beginning of the program #
 begin
+	# take the two operands #
 	read a;
 	read b;
+
+	# compute the sum #
 	c := a + b;
+
+	# write the result #
 	write c;
-end
+
+end # the end of the program #
 

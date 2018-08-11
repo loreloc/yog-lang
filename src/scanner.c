@@ -22,6 +22,7 @@ enum fsa_state
 	FSA_ASSIGN,
 	FSA_SEMICOLON,
 	FSA_PAREN,
+	FSA_COMMENT,
 	FSA_ERROR,
 	FSA_EOF,
 	FSA_ACCEPT
@@ -41,6 +42,7 @@ enum char_class
 	CHAR_EQUAL,
 	CHAR_SEMICOLON,
 	CHAR_PAREN,
+	CHAR_HASHTAG,
 	CHAR_EOF,
 	CHAR_UNKNOW
 };
@@ -101,7 +103,9 @@ struct token lex(struct lex_context *ctx)
 			report_lexical_error(ctx, text_loc, (text_len < TEXT_SIZE) ? text : TEXT_OVERFLOW_MSG);
 			memset(text, '\0', TEXT_SIZE);
 			text_len = 0;
-			new_state = FSA_START;
+			
+			if(new_state != FSA_COMMENT)
+				new_state = FSA_START;
 		}
 		else if(new_state == FSA_ACCEPT)
 		{
@@ -121,9 +125,12 @@ struct token lex(struct lex_context *ctx)
 
 		state = new_state;
 
-		// add the read character into the text buffer
-		if(state != FSA_START && text_len < TEXT_SIZE)
-			text[text_len++] = character;
+		if(state != FSA_START && state != FSA_COMMENT)
+		{
+			// add the read character into the text buffer
+			if(text_len < TEXT_SIZE)
+				text[text_len++] = character;
+		}
 
 		update_cursor(&ctx->loc, character);
 
@@ -253,6 +260,8 @@ enum char_class identify_char(char c)
 		return CHAR_SEMICOLON;
 	else if(c == '(' || c == ')')
 		return CHAR_PAREN;
+	else if(c == '#')
+		return CHAR_HASHTAG;
 	else if(c == EOF)
 		return CHAR_EOF;
 	else
@@ -261,57 +270,60 @@ enum char_class identify_char(char c)
 
 enum fsa_state next_state(enum fsa_state state, enum char_class class)
 {
-	static const enum fsa_state Transition_Table[16][13] =
+	static const enum fsa_state Transition_Table[17][14] =
 	{
-		             /*   WHITESPACE  DIGIT        ALPHABETICAL   SIGN        OPERATOR      LESS        GREATER
-		                  COLON       EQUAL        SEMICOLON      PAREN       EOF           UNKNOW                  */
-		/* START     */ { FSA_START,  FSA_LITERAL, FSA_WORD,      FSA_SIGN,   FSA_OPERATOR, FSA_LT,     FSA_GT,
-		                  FSA_COLON,  FSA_EQ,      FSA_SEMICOLON, FSA_PAREN,  FSA_EOF,      FSA_ERROR               },
+		             /*   WHITESPACE   DIGIT        ALPHABETICAL   SIGN         OPERATOR      LESS         GREATER
+		                  COLON        EQUAL        SEMICOLON      PAREN        HASHTAG       EOF          UNKNOW      */
+		/* START     */ { FSA_START,   FSA_LITERAL, FSA_WORD,      FSA_SIGN,    FSA_OPERATOR, FSA_LT,      FSA_GT,
+		                  FSA_COLON,   FSA_EQ,      FSA_SEMICOLON, FSA_PAREN,   FSA_COMMENT,  FSA_EOF,     FSA_ERROR    },
 
-		/* LITERAL   */ { FSA_ACCEPT, FSA_LITERAL, FSA_ERROR,     FSA_ACCEPT, FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,
-		                  FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT,   FSA_ERROR               },
+		/* LITERAL   */ { FSA_ACCEPT,  FSA_LITERAL, FSA_ERROR,     FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT,  FSA_ACCEPT,
+		                  FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,    FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT,  FSA_ERROR    },
 
-		/* WORD      */ { FSA_ACCEPT, FSA_WORD,    FSA_WORD,      FSA_ERROR,  FSA_ERROR,    FSA_ACCEPT, FSA_ACCEPT,
-		                  FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT,   FSA_ERROR               },
+		/* WORD      */ { FSA_ACCEPT,  FSA_WORD,    FSA_WORD,      FSA_ERROR,   FSA_ERROR,    FSA_ACCEPT,  FSA_ACCEPT,
+		                  FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,    FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT,  FSA_ERROR    },
 
-		/* SIGN      */ { FSA_ACCEPT, FSA_LITERAL, FSA_ACCEPT,    FSA_ERROR,  FSA_ERROR,    FSA_ERROR,  FSA_ERROR,
-		                  FSA_ERROR,  FSA_ERROR,   FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT,   FSA_ERROR               },
+		/* SIGN      */ { FSA_ACCEPT,  FSA_LITERAL, FSA_ACCEPT,    FSA_ERROR,   FSA_ERROR,    FSA_ERROR,   FSA_ERROR,
+		                  FSA_ERROR,   FSA_ERROR,   FSA_ACCEPT,    FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT,  FSA_ERROR    },
 
-		/* OPERATOR  */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,    FSA_ERROR,  FSA_ERROR,    FSA_ERROR,  FSA_ERROR,
-		                  FSA_ERROR,  FSA_ERROR,   FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT,   FSA_ERROR               },
+		/* OPERATOR  */ { FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,    FSA_ERROR,   FSA_ERROR,    FSA_ERROR,   FSA_ERROR,
+		                  FSA_ERROR,   FSA_ERROR,   FSA_ACCEPT,    FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT,  FSA_ERROR    },
 
-		/* EQ        */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,    FSA_ERROR,  FSA_ERROR,    FSA_ERROR,  FSA_ERROR,
-		                  FSA_ERROR,  FSA_ERROR,   FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT,   FSA_ERROR               },
+		/* EQ        */ { FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,    FSA_ERROR,   FSA_ERROR,    FSA_ERROR,   FSA_ERROR,
+		                  FSA_ERROR,   FSA_ERROR,   FSA_ACCEPT,    FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT,  FSA_ERROR    },
 
-		/* NEQ       */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,    FSA_ERROR,  FSA_ERROR,    FSA_ERROR,  FSA_ERROR,
-		                  FSA_ERROR,  FSA_ERROR,   FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT,   FSA_ERROR               },
+		/* NEQ       */ { FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,    FSA_ERROR,   FSA_ERROR,    FSA_ERROR,   FSA_ERROR,
+		                  FSA_ERROR,   FSA_ERROR,   FSA_ACCEPT,    FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT,  FSA_ERROR    },
 
-		/* LT        */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,    FSA_ERROR,  FSA_ERROR,    FSA_ERROR,  FSA_NEQ,
-		                  FSA_ERROR,  FSA_LTE,     FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT,   FSA_ERROR               },
+		/* LT        */ { FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,    FSA_ERROR,   FSA_ERROR,    FSA_ERROR,   FSA_NEQ,
+		                  FSA_ERROR,   FSA_LTE,     FSA_ACCEPT,    FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT,  FSA_ERROR    },
 
-		/* LTE       */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,    FSA_ERROR,  FSA_ERROR,    FSA_ERROR,  FSA_ERROR,
-		                  FSA_ERROR,  FSA_ERROR,   FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT,   FSA_ERROR               },
+		/* LTE       */ { FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,    FSA_ERROR,   FSA_ERROR,    FSA_ERROR,   FSA_ERROR,
+		                  FSA_ERROR,   FSA_ERROR,   FSA_ACCEPT,    FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT,  FSA_ERROR    },
 
-		/* GT        */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,    FSA_ERROR,  FSA_ERROR,    FSA_ERROR,  FSA_ERROR,
-		                  FSA_ERROR,  FSA_GTE,     FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT,   FSA_ERROR               },
+		/* GT        */ { FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,    FSA_ERROR,   FSA_ERROR,    FSA_ERROR,   FSA_ERROR,
+		                  FSA_ERROR,   FSA_GTE,     FSA_ACCEPT,    FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT,  FSA_ERROR    },
 
-		/* GTE       */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,    FSA_ERROR,  FSA_ERROR,    FSA_ERROR,  FSA_ERROR,
-		                  FSA_ERROR,  FSA_ERROR,   FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT,   FSA_ERROR               },
+		/* GTE       */ { FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,    FSA_ERROR,   FSA_ERROR,    FSA_ERROR,   FSA_ERROR,
+		                  FSA_ERROR,   FSA_ERROR,   FSA_ACCEPT,    FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT,  FSA_ERROR    },
 
-		/* COLON     */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,    FSA_ERROR,  FSA_ERROR,    FSA_ERROR,  FSA_ERROR,
-		                  FSA_ERROR,  FSA_ASSIGN,  FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT,   FSA_ERROR               },
+		/* COLON     */ { FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,    FSA_ERROR,   FSA_ERROR,    FSA_ERROR,   FSA_ERROR,
+		                  FSA_ERROR,   FSA_ASSIGN,  FSA_ACCEPT,    FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT,  FSA_ERROR    },
 
-		/* ASSIGN    */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,    FSA_ERROR,  FSA_ERROR,    FSA_ERROR,  FSA_ERROR,
-		                  FSA_ERROR,  FSA_ERROR,   FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT,   FSA_ERROR               },
+		/* ASSIGN    */ { FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,    FSA_ERROR,   FSA_ERROR,    FSA_ERROR,   FSA_ERROR,
+		                  FSA_ERROR,   FSA_ERROR,   FSA_ACCEPT,    FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT,  FSA_ERROR    },
 
-		/* SEMICOLON */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,
-		                  FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT,   FSA_ERROR               },
+		/* SEMICOLON */ { FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,    FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT,  FSA_ACCEPT,
+		                  FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,    FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT,  FSA_ERROR    },
 
-		/* PAREN     */ { FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT,   FSA_ACCEPT, FSA_ACCEPT,
-		                  FSA_ACCEPT, FSA_ACCEPT,  FSA_ACCEPT,    FSA_ACCEPT, FSA_ACCEPT,   FSA_ERROR               },
+		/* PAREN     */ { FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,    FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT,  FSA_ACCEPT,
+		                  FSA_ACCEPT,  FSA_ACCEPT,  FSA_ACCEPT,    FSA_ACCEPT,  FSA_ACCEPT,   FSA_ACCEPT,  FSA_ERROR    },
 
-		/* ERROR     */ { FSA_START,  FSA_ERROR,   FSA_ERROR,     FSA_ERROR,  FSA_ERROR,    FSA_ERROR,  FSA_ERROR,
-		                  FSA_ERROR,  FSA_ERROR,   FSA_ERROR,     FSA_ERROR,  FSA_ACCEPT,   FSA_ERROR               }
+		/* COMMENT   */ { FSA_COMMENT, FSA_COMMENT, FSA_COMMENT,   FSA_COMMENT, FSA_COMMENT,  FSA_COMMENT, FSA_COMMENT,
+		                  FSA_COMMENT, FSA_COMMENT, FSA_COMMENT,   FSA_COMMENT, FSA_START,    FSA_START,   FSA_COMMENT  },
+
+		/* ERROR     */ { FSA_START,   FSA_ERROR,   FSA_ERROR,     FSA_ERROR,   FSA_ERROR,    FSA_ERROR,   FSA_ERROR,
+		                  FSA_ERROR,   FSA_ERROR,   FSA_ERROR,     FSA_ERROR,   FSA_COMMENT,  FSA_ACCEPT,  FSA_ERROR    }
 	};
 
 	return Transition_Table[(size_t)state][(size_t)class];
