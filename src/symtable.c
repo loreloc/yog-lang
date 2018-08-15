@@ -10,9 +10,8 @@ void rehash(struct symbol_table *st, size_t cnt);
 void symbol_table_init(struct symbol_table *st)
 {
 	st->buckets_cnt = ST_BUCKETS_MIN;
-	st->buckets = ymalloc(st->buckets_cnt * sizeof(struct symbol *));
+	st->buckets = ycalloc(st->buckets_cnt, sizeof(struct symbol *));
 
-	st->buckets[0] = NULL;
 	st->symbols_cnt = 0;
 }
 
