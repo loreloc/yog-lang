@@ -31,11 +31,19 @@ set(YOG_SRC ${YOG_SRC_DIR}/yog.c
             ${YOG_SRC_DIR}/semanter.c
             ${YOG_SRC_DIR}/interpreter.c)
 
-# set c compiler debug flags
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -std=c99 -Wall -Wextra")
+if (MSVC)
+      # set c compiler debug flags
+      set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /W4")
 
-# set c compiler release flags
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -std=c99")
+      # set c compiler release flags
+      set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
+else ()
+      # set c compiler debug flags
+      set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -std=c99 -Wall -Wextra")
+
+      # set c compiler release flags
+      set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -std=c99")
+endif ()
 
 # yog interpreter executable
 add_executable(yog ${YOG_SRC})

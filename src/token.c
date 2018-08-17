@@ -3,78 +3,65 @@
 
 const char *token_type_str(token_type_t type)
 {
-	int64_t type_index;
-
-	// the token types are power of two
-	// so calculate the integer log2 of type
-	// in order to consent the compiler to
-	// optimize the switch with a jump table
-	__asm__
-	(
-		"bsr %1, %0\n\t"
-		: "=r"(type_index)
-		: "r"(type)
-	);
-
-	switch(type_index)
+	switch(type)
 	{
-		case 0:
+		case TOKEN_EOF:
 			return "EOF";
-		case 1:
+		case TOKEN_VAR:
 			return "var";
-		case 2:
+		case TOKEN_BEGIN:
 			return "begin";
-		case 3:
+		case TOKEN_END:
 			return "end";
-		case 4:
+		case TOKEN_INT:
 			return "int";
-		case 5:
+		case TOKEN_READ:
 			return "read";
-		case 6:
+		case TOKEN_WRITE:
 			return "write";
-		case 7:
+		case TOKEN_COLON:
 			return ":";
-		case 8:
+		case TOKEN_SEMICOLON:
 			return ";";
-		case 9:
+		case TOKEN_LITERAL:
 			return "literal";
-		case 10:
+		case TOKEN_IDENTIFIER:
 			return "identifier";
-		case 11:
+		case TOKEN_PLUS:
 			return "+";
-		case 12:
+		case TOKEN_MINUS:
 			return "-";
-		case 13:
+		case TOKEN_MUL:
 			return "*";
-		case 14:
+		case TOKEN_DIV:
 			return "/";
-		case 15:
+		case TOKEN_ASSIGN:
 			return ":=";
-		case 16:
+		case TOKEN_LPAREN:
 			return "(";
-		case 17:
+		case TOKEN_RPAREN:
 			return ")";
-		case 18:
+		case TOKEN_IF:
 			return "if";
-		case 19:
+		case TOKEN_ELSE:
 			return "else";
-		case 20:
+		case TOKEN_WHILE:
 			return "while";
-		case 21:
+		case TOKEN_REPEAT:
 			return "repeat";
-		case 22:
+		case TOKEN_UNTIL:
 			return "until";
-		case 23:
+		case TOKEN_EQ:
 			return "=";
-		case 24:
+		case TOKEN_NEQ:
 			return "<>";
-		case 25:
+		case TOKEN_LT:
 			return "<";
-		case 26:
+		case TOKEN_LTE:
 			return "<=";
-		case 27:
+		case TOKEN_GT:
 			return ">";
-		case 28:
+		case TOKEN_GTE:
 			return ">=";
 		default:
 			return NULL;

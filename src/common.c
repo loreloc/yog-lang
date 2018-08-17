@@ -6,7 +6,7 @@ void yassert_fail(bool val, const char *msg, const char *file, size_t line)
 {
 	if(val == false)
 	{
-		fprintf(stderr, "assertion failed: %s in %s at %lu\n", msg, file, line);
+		fprintf(stderr, "assertion failed: %s in %s at %zu\n", msg, file, line);
 		exit(~0);
 	}
 }
